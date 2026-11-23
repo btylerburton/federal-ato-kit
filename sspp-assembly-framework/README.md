@@ -8,6 +8,15 @@ last_updated: "2026-11-16"
 
 # Modular SSPP assembly framework
 
+## Repository-guided draft wizard
+
+Run `tools/wizard.py intake`, answer the durable clarification questions, then run
+`tools/wizard.py generate` for a LATO-reference or Low/Moderate/High ATO review project.
+The `generate --export` option connects diagram rendering and DOCX verification when tools
+are installed. See the kit's [wizard guide](../docs/kit/wizard.md) for the full workflow.
+New response shells include per-control guidance from the catalog-wide example library;
+commented examples are excluded from assembled document text.
+
 Build an SSPP from versioned modules with explicit provenance, predictable inclusion and
 repeatable output. Prepared with OpenCode AI assistance. It lives in the consolidated portable-ato-kit repository
 (see the [root README](../README.md)); no remote repository has been created and the

@@ -1,0 +1,20 @@
+{
+  "system_name": "Synthetic public information service",
+  "mode": "lato",
+  "baseline": "",
+  "scope_confirmed": true,
+  "system_owner": "Fictional owner — replace for a real project",
+  "environment": "Synthetic test only",
+  "data_categories": ["Public synthetic questions"],
+  "boundary_summary": "One proposed service, with an external browser; no real authorization determination",
+  "date": "2026-11-23",
+  "topology": {
+    "nodes": [
+      {"id": "browser", "title": "Browser", "boundary": "outside"},
+      {"id": "service", "title": "Application service", "boundary": "inside"}
+    ],
+    "flows": [
+      {"from": "browser", "to": "service", "data": "Public synthetic question", "protocol": "HTTPS", "authentication": "Anonymous", "storage": "Not retained in this fictional example"}
+    ]
+  }
+}

@@ -150,6 +150,10 @@ def markdown(content, targets):
     # Fenced catalog JSON and code examples are literal text, not resource references.
     chunks = re.split(r"(^```[^\n]*\n.*?^```[ \t]*$)", source, flags=re.M | re.S)
     active = "\n".join(chunks[::2])
+    # Illustrative responses in HTML comments must not enter assembled documents.
+    for index in range(0, len(chunks), 2):
+        chunks[index] = re.sub(r"<!--.*?-->", "", chunks[index], flags=re.S)
+    active = "\n".join(chunks[::2])
     if re.search(r"!?\[[^\n]*\]\[|^\s*\[[^\]]+\]:", active, re.M):
         raise ValueError("Convert reference-style links/images to registered module targets")
     if re.search(r"<\s*(?:img|script|iframe)\b", active, re.I):

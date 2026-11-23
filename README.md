@@ -22,6 +22,17 @@ evidence that any control is effective; examples are synthetic.
 
 ## Quick start
 
+For repository-guided LATO/full-ATO preparation, start with the
+[draft wizard workflow](docs/kit/wizard.md). It records repository observations, asks for
+missing system context, selects a pinned baseline and creates an editable draft with diagrams.
+The optional `ato-wizard` agent skill adds a source/evidence review workflow; CLI path discovery
+alone is not an implementation assessment.
+
+The [control library](examples/control-library/README.md) covers the full pinned catalog with
+descriptions, commented illustrative responses, questions, evidence guidance and source links.
+The original `examples/package/` remains a minimal validator fixture; use the control library
+and wizard for authoring guidance.
+
 Python 3.11+ and nothing else (no installs, no network):
 
 ```sh

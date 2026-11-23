@@ -127,7 +127,9 @@ def response_document(control, part_ids):
                     "- Responsible component/provider: UNFILLED\n- Evidence references: UNFILLED")
     rows += ["## Evidence references\n\nUNFILLED — register local attachments or external references in supporting.json.",
              "## Current assessment\n\nNOT_ASSESSED — record date, method, observations and limitations.",
-             "## Open work\n\nUNFILLED — record tracked item, owner and trigger."]
+              "## Open work\n\nUNFILLED — record tracked item, owner and trigger."]
+    from control_library import guidance_markdown
+    rows.append(guidance_markdown(control))
     return markdown_file(control["title"] + " response", "Team-owned control response; preserved on regeneration", "\n\n".join(rows))
 
 

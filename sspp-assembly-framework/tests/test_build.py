@@ -123,6 +123,12 @@ class BuildTests(unittest.TestCase):
         files = builder.compose(self.manifest)
         self.assertIn(literal, files["document.md"].decode())
 
+    def test_commented_example_not_exported_as_implementation(self):
+        (self.project / 'chapters/system.md').write_text('Actual draft.\n<!--\nEXAMPLE_ONLY_SENTINEL\n[example](../not-a-real-evidence-file)\n-->\n')
+        files = builder.compose(self.manifest)
+        self.assertIn('Actual draft.', files['document.md'].decode())
+        self.assertNotIn('EXAMPLE_ONLY_SENTINEL', files['document.md'].decode())
+
     def test_cli_runs_outside_framework_and_reports_failure(self):
         command = [sys.executable, str(ROOT / "tools/build.py"), str(self.manifest),
                    "--output", str(self.output)]

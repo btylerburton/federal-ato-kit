@@ -16,7 +16,7 @@ def main():
     for path in (ROOT / "tools/ato").glob("*.py"):
         ast.parse(path.read_text(), filename=str(path.relative_to(ROOT)))
     docs = list((ROOT / "docs").rglob("*.md")) + [ROOT / "README.md", ROOT / "tools/ato/README.md"]
-    docs += list((ROOT / ".agents/skills/ato-sspp").rglob("*.md"))
+    docs += list((ROOT / ".agents/skills").rglob("*.md"))
     for path in docs:
         text = path.read_text()
         if not text.startswith("---\n") or "\n---\n" not in text[4:]:
@@ -33,7 +33,7 @@ def main():
         if "entrypoint" in item and not (ROOT / item["entrypoint"]).is_file():
             raise ValueError("Unwired tool: " + item["id"])
     owned = list((ROOT / "tools/ato").glob("*")) + list((ROOT / "docs").rglob("*"))
-    owned += list((ROOT / ".agents/skills/ato-sspp").rglob("*.md"))
+    owned += list((ROOT / ".agents/skills").rglob("*.md"))
     for path in owned:
         if path.is_file() and path.suffix in {".py", ".md", ".json", ".jsonl"}:
             text = path.read_text()
