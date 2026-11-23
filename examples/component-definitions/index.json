@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "components": {
+    "org-dependency-management": {
+      "path": "org-dependency-management/component-definition.json",
+      "sha256": "c51b2b1f5fab8d51d90812b78b81e735c0f2455fbc7c4e44bd0d485cc1fbd634",
+      "title": "org-dependency-management Component Definition",
+      "version": "1.0.0",
+      "last_modified": "2026-03-31T00:00:00.000000+00:00",
+      "oscal_version": "1.1.2",
+      "source": "User-supplied reference component definition; imported unchanged on 2026-11-23",
+      "applicability": "Requires consuming-system confirmation; not current provider attestation"
+    },
+    "gsa_common_controls": {
+      "path": "gsa_common_controls/component-definition.json",
+      "sha256": "aaa1a7bea08c39e5c3976de5021c890a32f458932a3fefd700f2d0f91f22a261",
+      "title": "GSA Common Controls Component Definition for Non-GSA IT Federal Systems",
+      "version": "0.0.2",
+      "last_modified": "2024-09-26T19:27:29.206410+00:00",
+      "oscal_version": "1.0.4",
+      "source": "User-supplied reference component definition; imported unchanged on 2026-11-23",
+      "applicability": "Requires consuming-system confirmation; not current provider attestation"
+    },
+    "cloud_gov": {
+      "path": "cloud_gov/component-definition.json",
+      "sha256": "7dd6d4c7d1c5a29b500ca5416c1d6bc4d7350fafb564228880f5269e53fef233",
+      "title": "Cloud.gov LATO CRM",
+      "version": "0.0.2",
+      "last_modified": "2024-06-24T16:15:54+00:00",
+      "oscal_version": "1.1.2",
+      "source": "User-supplied reference component definition; imported unchanged on 2026-11-23",
+      "applicability": "Requires consuming-system confirmation; not current provider attestation"
+    },
+    "cg-egress-proxy": {
+      "path": "cg-egress-proxy/component-definition.json",
+      "sha256": "d01d01025194a6849c4d9c12813d2b5c47d86fd1949268083e29b298149bd116",
+      "title": "cg-egress-proxy Egress Proxy Component Definition.",
+      "version": "0.0.2",
+      "last_modified": "2025-01-24T19:52:58.486096+00:00",
+      "oscal_version": "1.1.2",
+      "source": "User-supplied reference component definition; imported unchanged on 2026-11-23",
+      "applicability": "Requires consuming-system confirmation; not current provider attestation"
+    }
+  }
+}

@@ -97,6 +97,8 @@ class WizardTests(unittest.TestCase):
 
     def test_interactive_questions_preserve_existing_answers(self):
         self.data['system_name'] = ''
+        from inheritance import defaults
+        self.data['inheritance'] = defaults()
         self.answers.write_text(json.dumps(self.data))
         prompts = []
         def answer(question):
@@ -142,6 +144,26 @@ class WizardTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn('outside the application', result.stderr)
         self.assertFalse((self.repo / 'export').exists())
+
+    def test_inheritance_is_exported_and_user_edits_preserved(self):
+        self.data['inheritance'] = {'hosting_service': 'cloud-gov-pages', 'egress_proxy': 'no',
+            'gsa_common_controls': 'unknown', 'org_dependency_management': 'unknown', 'sha_pinning': 'no'}
+        self.answers.write_text(json.dumps(self.data))
+        out = self.root / 'draft'
+        wizard.generate(self.repo, self.answers, out)
+        manifest = load_json(out / 'manifest.json')
+        self.assertEqual(len([m for m in manifest['modules'] if m['id']=='inherited-responsibilities']), 1)
+        report = load_json(out / 'inheritance/map.json')
+        self.assertNotIn('cg-egress-proxy', {r['provider_id'] for r in report['mappings']})
+        path = out / 'inheritance/responsibilities.md'
+        path.write_text(path.read_text() + '\nOwner review note.\n')
+        old = (out / 'inheritance/map.json').read_bytes()
+        self.data['inheritance']['gsa_common_controls'] = 'no'
+        self.answers.write_text(json.dumps(self.data))
+        wizard.generate(self.repo, self.answers, out)
+        self.assertEqual((out / 'inheritance/map.json').read_bytes(), old)
+        self.assertIn('Owner review note.', path.read_text())
+        self.assertIn('inheritance/map.json', load_json(out / 'wizard-report.json')['preserved_user_files'])
 
 
 if __name__ == '__main__':

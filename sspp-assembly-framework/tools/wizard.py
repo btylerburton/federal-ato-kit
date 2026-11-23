@@ -11,9 +11,11 @@ from baselines import KIT, selected_catalog
 from repository_intake import inspect, questions, checkout_root
 from scaffold import scaffold, markdown_file
 from diagrams import validate as validate_diagram
+from inheritance import answers_for, generated_files, ask as ask_inheritance
 
 
 def require_answers(answers):
+    answers_for(answers)
     for key in ('system_name', 'system_owner', 'environment', 'boundary_summary', 'date'):
         if not isinstance(answers.get(key), str) or not answers[key].strip() or '\n' in answers[key]:
             raise ValueError(f'Clarification required: {key}')
@@ -92,7 +94,7 @@ def ask(answer_path, prompt=input):
         key = question['id']
         if key == 'baseline' and answers.get('mode') != 'ato':
             continue
-        if key == 'topology':
+        if key == 'topology' or question.get('section') == 'inheritance':
             continue
         existing = answers.get(key)
         if existing not in (None, '', [], False):
@@ -112,6 +114,7 @@ def ask(answer_path, prompt=input):
             answer_path.write_bytes(json_bytes(answers))
     require_answers(answers)
     topology_files(answers)
+    ask_inheritance(answers, prompt, lambda: answer_path.write_bytes(json_bytes(answers)))
     return answers
 
 
@@ -121,6 +124,7 @@ def generate(repository, answer_path, output):
     require_answers(answers)
     catalog, selection = selected_catalog(answers['mode'], answers.get('baseline'))
     diagrams = topology_files(answers)  # Fail before touching the project if answers are malformed.
+    inherited = generated_files(answers, catalog)
     observations = inspect(repository)
     if output.resolve().is_relative_to(repository.resolve()) or repository.resolve().is_relative_to(output.resolve()):
         raise ValueError('Generate into a separate project directory, outside the application checkout')
@@ -142,6 +146,7 @@ def generate(repository, answer_path, output):
             'All generated control responses remain UNFILLED/NOT_ASSESSED until authored and reviewed.\n\n'
             'This draft does not include signed authorizations or provider attestations.\n')
     desired = dict(diagrams)
+    desired.update(inherited)
     desired['chapters/system-name.md'] = markdown_file('System intake', 'Repository and owner-supplied context', note)
     desired['chapters/boundary.md'] = markdown_file('Boundary intake', 'Proposed boundary from user answers', note)
     state_path = output / 'wizard-state.json'
@@ -152,17 +157,25 @@ def generate(repository, answer_path, output):
     diagram_edited = state_path.exists() and any(
         name not in managed or not (output / name).is_file() or sha((output / name).read_bytes()) != managed[name]
         for name in diagram_names)
+    inheritance_edited = state_path.exists() and any(
+        (name in managed and (not (output / name).is_file() or sha((output / name).read_bytes()) != managed[name]))
+        or ((output / name).exists() and name not in managed)
+        for name in inherited)
     for name, content in desired.items():
         path = output / name
         if diagram_edited and name in diagram_names:
             preserved.append(name)
             continue
+        if inheritance_edited and name in inherited:
+            preserved.append(name)
+            continue
         if name in managed and sha(path.read_bytes()) != managed[name]:
             preserved.append(name)
             continue
-        if name not in managed and state_path.exists():
+        if name not in managed and state_path.exists() and path.exists():
             preserved.append(name)
             continue
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(content)
         managed[name] = sha(content)
     # Refresh manifest after diagram answers, preserving scaffold identities and authored files.

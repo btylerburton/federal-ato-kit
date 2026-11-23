@@ -206,6 +206,9 @@ def plan(output, full, selected, document, state):
                         module("response-" + slug, key.upper() + " Response", response, "Team-authored response")]
     for key, title in APPENDICES:
         modules.append(module(key, title, f"chapters/{key}.md", "Team-authored appendix"))
+    if (output / 'inheritance/responsibilities.md').is_file():
+        modules.append(module('inherited-responsibilities', 'Candidate inherited responsibilities',
+                              'inheritance/responsibilities.md', 'Versioned provider reference assertions; applicability unresolved'))
     supporting = load_json(output / "supporting.json") if (output / "supporting.json").exists() else {"modules": []}
     if not isinstance(supporting, dict) or not isinstance(supporting.get("modules"), list):
         raise ValueError("supporting.json must contain a modules array")

@@ -76,6 +76,41 @@ architecture/data-flow. They are editable projections, not four independently di
 architectures. Review scope and level of detail for each. The generated flow table carries the
 declared data/authentication/storage semantics. Rendering checks do not verify them.
 
+## Inherited and shared controls
+
+The wizard also asks whether you host on cloud.gov PaaS or Pages, deploy cg-egress-proxy,
+fall within GSA common-control scope, enroll in org-dependency-management, and use verified
+SHA-pinned actions. See [component reference examples](../../examples/component-definitions/README.md)
+for the four imported definitions and SHA-pinning examples.
+
+Answers are stored in an optional `inheritance` object:
+
+```json
+{
+  "hosting_service": "cloud-gov-pages",
+  "egress_proxy": "unknown",
+  "gsa_common_controls": "unknown",
+  "org_dependency_management": "unknown",
+  "sha_pinning": "unknown"
+}
+```
+
+Omitted legacy answers are treated as unknown, not consent to claim inheritance. `ask` requests
+missing fields once and preserves explicit yes/no/unknown answers. Generation emits
+`inheritance/map.json` and `inheritance/responsibilities.md`, and includes the responsibility
+report in the document manifest. A yes answer identifies a candidate reference; no excludes it;
+unknown lists unresolved candidates for clarification. No system status is automatically completed.
+
+The mappings retain exact source control IDs and statement-part IDs, provider prose/status,
+rule identifiers and descriptions, version/date/hash, and an unresolved applicability decision.
+Controls not covered by the references remain application questions. The source definitions
+are not rewritten or recertified. Pages is explicitly distinguished from the supplied PaaS CRM.
+Provider-managed responsibility and authorization-boundary placement are separate decisions.
+
+The map/report form one preservation unit: if either is edited, both are preserved and listed
+for reconciliation on regeneration. Full OSCAL incorporation of these candidate mappings and
+owner-confirmed inheritance decisions is not implied by this readable report integration.
+
 ## What is autonomous now
 
 - Bounded, tracked-path repository inventory: manifests, deployments, workflow/test/doc paths.

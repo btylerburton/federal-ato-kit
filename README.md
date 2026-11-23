@@ -18,7 +18,9 @@ holds two parts that ship together:
 
 Keep system controls, source imports, evidence, decisions, logs and assessment results in
 each consuming project. Nothing here is an agency baseline, an accepted federal policy or
-evidence that any control is effective; examples are synthetic.
+evidence that any control is effective. Test-system examples are synthetic; the four
+user-supplied [component definitions](examples/component-definitions/README.md) are real
+versioned reference assertions, explicitly requiring current applicability review.
 
 ## Quick start
 
@@ -32,6 +34,11 @@ The [control library](examples/control-library/README.md) covers the full pinned
 descriptions, commented illustrative responses, questions, evidence guidance and source links.
 The original `examples/package/` remains a minimal validator fixture; use the control library
 and wizard for authoring guidance.
+
+The wizard includes hosting/common-control questions and produces candidate part-level
+inheritance mappings from cloud.gov, cg-egress-proxy, GSA common controls and org dependency
+management reference definitions. See the reference README for SHA-pinning examples and
+the distinction between provider assertions and verified application responsibility.
 
 Python 3.11+ and nothing else (no installs, no network):
 
