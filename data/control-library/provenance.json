@@ -1,0 +1,31 @@
+{
+  "catalog": {
+    "path": "data/control-library/catalog.json",
+    "url": "https://raw.githubusercontent.com/usnistgov/oscal-content/5006f18c8047643eaa70e35dd0d20a58bcc41856/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+    "revision": "5006f18c8047643eaa70e35dd0d20a58bcc41856",
+    "sha256": "64ca6b4161de51ab6af098a7d101d326f14c95e1abf721396cd8a049e8115eeb"
+  },
+  "low": {
+    "path": "data/control-library/low.json",
+    "url": "https://raw.githubusercontent.com/usnistgov/oscal-content/5006f18c8047643eaa70e35dd0d20a58bcc41856/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_LOW-baseline_profile.json",
+    "revision": "5006f18c8047643eaa70e35dd0d20a58bcc41856",
+    "sha256": "cfd4f5d9a192eb42dc04b745d82f95a85926a2a85a45418034a380a42bda9424"
+  },
+  "moderate": {
+    "path": "data/control-library/moderate.json",
+    "url": "https://raw.githubusercontent.com/usnistgov/oscal-content/5006f18c8047643eaa70e35dd0d20a58bcc41856/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_MODERATE-baseline_profile.json",
+    "revision": "5006f18c8047643eaa70e35dd0d20a58bcc41856",
+    "sha256": "e3a0f11237cfaac24dfcf1586e07683f17423757fd84208deb33196b12e8f590"
+  },
+  "high": {
+    "path": "data/control-library/high.json",
+    "url": "https://raw.githubusercontent.com/usnistgov/oscal-content/5006f18c8047643eaa70e35dd0d20a58bcc41856/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_HIGH-baseline_profile.json",
+    "revision": "5006f18c8047643eaa70e35dd0d20a58bcc41856",
+    "sha256": "d2ef340986b9f1ee820ad866a0f964d9a9d1088b24080c74b795ddb0148b9f83"
+  },
+  "lato-reference": {
+    "path": "data/control-library/lato-reference.json",
+    "sha256": "5e36364430d2050cc7695f92c1afaf4e43b4a3b91d633bf83c24bc6f42b9b4a9",
+    "source": "User-approved reference control-ID selection; not a universal LATO baseline"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "scope": "User-approved complete control library and repository-intake draft wizard; no authorization is issued by tooling",
+  "items": [
+    {"id":"WIZ-01","title":"Pinned catalog and baseline inputs","status":"in_progress","owner":"coordinator","acceptance":"Official catalog and Low/Moderate/High selections pinned; user-approved 58-control LATO reference explicitly labeled"},
+    {"id":"WIZ-02","title":"Control-specific sample library","status":"planned","owner":"library delegate","depends_on":["WIZ-01"],"acceptance":"Every catalog control/enhancement has description, hidden illustrative example, questions, evidence guidance and source links; withdrawn controls handled distinctly"},
+    {"id":"WIZ-03","title":"Repository clarification and generation workflow","status":"in_progress","owner":"coordinator","depends_on":["WIZ-01","WIZ-02"],"acceptance":"Read-only bounded repository intake, durable questions/answers, explicit baseline selection, editable draft/control/diagram generation; reruns preserve team work"},
+    {"id":"WIZ-04","title":"End-to-end verification and instructions","status":"planned","owner":"coordinator and reviewer","depends_on":["WIZ-02","WIZ-03"],"acceptance":"Actual synthetic LATO/full-ATO builds and diagram rendering, library completeness, example exclusion, portable CLI tests, documented unknowns and limits"}
+  ]
+}
