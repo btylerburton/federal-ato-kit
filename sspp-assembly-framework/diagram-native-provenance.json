@@ -1,0 +1,80 @@
+[
+  {
+    "name": "libbrotli1",
+    "version": "1.1.0-2+b7",
+    "url": "https://deb.debian.org/debian/pool/main/b/brotli/libbrotli1_1.1.0-2+b7_arm64.deb",
+    "sha256": "10270398c4842e71c72b4081fa1761728b3225d6c8dce7c58d5baafe58a5e18f"
+  },
+  {
+    "name": "libexpat1",
+    "version": "2.8.3-1~deb13u1",
+    "url": "https://deb.debian.org/debian/pool/main/e/expat/libexpat1_2.8.3-1~deb13u1_arm64.deb",
+    "sha256": "c3248c4beb721c8290e6e34527ae56b1fc965aa6a14982ca602df4458ef0854e"
+  },
+  {
+    "name": "fontconfig-config",
+    "version": "2.15.0-2.3",
+    "url": "https://deb.debian.org/debian/pool/main/f/fontconfig/fontconfig-config_2.15.0-2.3_arm64.deb",
+    "sha256": "10f643f467b51cf25fc18d1945bc61246dd8d8d1fe6bc712a2b1712c74ebc4d6"
+  },
+  {
+    "name": "libfontconfig1",
+    "version": "2.15.0-2.3",
+    "url": "https://deb.debian.org/debian/pool/main/f/fontconfig/libfontconfig1_2.15.0-2.3_arm64.deb",
+    "sha256": "872781cf62926b68c34a4302a3caae334ff8d4d83a2b2477f8fb454460aadc99"
+  },
+  {
+    "name": "fonts-dejavu-core",
+    "version": "2.37-8",
+    "url": "https://deb.debian.org/debian/pool/main/f/fonts-dejavu/fonts-dejavu-core_2.37-8_all.deb",
+    "sha256": "86635b3d25b3655fc11cb3ecc3af59f0bf19643b02b94f2de48bd10253cdba12"
+  },
+  {
+    "name": "fonts-dejavu-mono",
+    "version": "2.37-8",
+    "url": "https://deb.debian.org/debian/pool/main/f/fonts-dejavu/fonts-dejavu-mono_2.37-8_all.deb",
+    "sha256": "3003e98a5debfdeadc7040a7f715fe9fe6fb67f68deacf6049b54e30f07fc014"
+  },
+  {
+    "name": "libfreetype6",
+    "version": "2.13.3+dfsg-1+deb13u1",
+    "url": "https://deb.debian.org/debian/pool/main/f/freetype/libfreetype6_2.13.3+dfsg-1+deb13u1_arm64.deb",
+    "sha256": "0c426e83f1af816b9a4df9056fd2238463d1cd07969ee640965da9fb6ecaf107"
+  },
+  {
+    "name": "libglib2.0-0t64",
+    "version": "2.84.4-3~deb13u5",
+    "url": "https://deb.debian.org/debian/pool/main/g/glib2.0/libglib2.0-0t64_2.84.4-3~deb13u5_arm64.deb",
+    "sha256": "d446f0ea85fb9dc411219ce861e59e5eabe1981c796918771a7d2aa97cc72481"
+  },
+  {
+    "name": "libgraphite2-3",
+    "version": "1.3.14-2+deb13u1",
+    "url": "https://deb.debian.org/debian/pool/main/g/graphite2/libgraphite2-3_1.3.14-2+deb13u1_arm64.deb",
+    "sha256": "b0c3414b113de62be1dc28fa2c899ac0856256e2f094d92c36c3275a5053311a"
+  },
+  {
+    "name": "libharfbuzz0b",
+    "version": "10.2.0-1+deb13u1",
+    "url": "https://deb.debian.org/debian/pool/main/h/harfbuzz/libharfbuzz0b_10.2.0-1+deb13u1_arm64.deb",
+    "sha256": "3ff928f981b54b491ee12e4cf68558cc5d61c652bdab276cd4c4c3fbbcee16ca"
+  },
+  {
+    "name": "libpng16-16t64",
+    "version": "1.6.48-1+deb13u5",
+    "url": "https://deb.debian.org/debian/pool/main/libp/libpng1.6/libpng16-16t64_1.6.48-1+deb13u5_arm64.deb",
+    "sha256": "11096ad43504ca24e8044bcc89e922d932a2812ff25568613b28d22235190ba5"
+  },
+  {
+    "name": "libpcre2-8-0",
+    "version": "10.46-1~deb13u2",
+    "url": "https://deb.debian.org/debian/pool/main/p/pcre2/libpcre2-8-0_10.46-1~deb13u2_arm64.deb",
+    "sha256": "e7d2c997dac145c16457be0fed3d084c98cd030bec7633eec7e5bde6dbb97712"
+  },
+  {
+    "name": "libatomic1",
+    "version": "14.2.0-19",
+    "url": "https://deb.debian.org/debian/pool/main/g/gcc-14/libatomic1_14.2.0-19_arm64.deb",
+    "sha256": "7ccff90234484bf21ae5ecb79d25b6a84b2f4038f65dd139085b2e3a937cd8dc"
+  }
+]

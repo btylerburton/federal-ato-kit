@@ -1,0 +1,3 @@
+SYNTHETIC TEST RECORD
+This file demonstrates attachment copying and hashing only.
+It contains no actual assessment results, signatures, personal information or credentials.

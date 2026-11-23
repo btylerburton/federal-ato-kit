@@ -1,0 +1,10 @@
+@startuml
+title Application architecture — SYNTHETIC STARTER / NOT APPROVED
+actor "External viewer" as viewer
+rectangle "Proposed boundary — review required" {
+  rectangle "Service — UNFILLED" as service
+  database "Store — UNFILLED" as store
+}
+viewer --> service : UNFILLED request / protocol / auth
+service --> store : UNFILLED read/write
+@enduml

@@ -1,0 +1,14 @@
+@startuml
+title Data flow — SYNTHETIC STARTER / NOT APPROVED
+actor "External viewer" as viewer
+rectangle "Proposed boundary — review required" {
+  rectangle "Service — UNFILLED" as service
+}
+viewer --> service : UNFILLED request / protocol / auth
+note right of service
+Data: UNFILLED
+Protocol: UNFILLED
+Authentication: UNFILLED
+Storage/retention: UNFILLED
+end note
+@enduml

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "claims": [
+    {"id":"EXAMPLE-TRANSPORT","statement":"Synthetic example: requests reach only the approved recipient, including redirect and error paths.","controls":["SC-7","SC-8","SI-10"],"environment":"synthetic-example","source_revision":"example-v1","required_kind":"live-test","evidence_ids":[]},
+    {"id":"EXAMPLE-SESSION","statement":"Synthetic example: the relying party validates session identity, audience and expiry.","controls":["IA-2","AC-12"],"environment":"synthetic-example","source_revision":"example-v1","required_kind":"live-test","evidence_ids":[]}
+  ],
+  "evidence": []
+}

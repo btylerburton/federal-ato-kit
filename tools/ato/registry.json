@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "tools": [
+    {"id":"package-integrity","entrypoint":"tools/ato/verify.py","mode":"package","runtime":"Python standard library","proves":"Inventory parity, preserved excerpt hashes, local Trestle path existence and component JSON syntax","does_not_prove":"OSCAL validity, implementation effectiveness or baseline approval"},
+    {"id":"evidence-readiness","entrypoint":"tools/ato/verify.py","mode":"claims","runtime":"Python standard library","proves":"Evidence integrity, freshness, environment, revision and method matching","does_not_prove":"Truth or sufficiency of recorded observations"},
+    {"id":"toolkit-check","entrypoint":"tools/ato/check.py","runtime":"Python standard library","proves":"Synthetic regression tests, documentation structure and tool wiring","does_not_prove":"Any project's effective controls"},
+    {"id":"checkpoint-timer","entrypoint":"tools/ato/heartbeat.py","runtime":"Python standard library","proves":"Timestamped project-supplied state snapshots","does_not_prove":"AI invocation or reflection"},
+    {"id":"environment-components","entrypoint":"tools/ato/environment_report.py","runtime":"Optional isolated environment","dependencies":["compliance-trestle"],"proves":"Installed package/license inventory and supplied component model roundtrip","does_not_prove":"Provider inheritance, profile resolution or historical schema conformance"},
+    {"id":"synthetic-authoring","entrypoint":"tools/ato/authoring_check.py","invocation":"pytest","dependencies":["pytest","compliance-trestle"],"proves":"Synthetic prose/part propagation, replacement, excerpt exclusion and repeat-build equality","does_not_prove":"Full project SSPP assembly"},
+    {"id":"property-checks","entrypoint":"tools/ato/properties_check.py","invocation":"pytest","dependencies":["pytest","hypothesis"],"proves":"Synthetic digest invariants","does_not_prove":"Authenticity of evidence"}
+  ],
+  "optional_dependencies": {
+    "lock": "tools/ato/requirements.txt",
+    "direct_requirements": "tools/ato/requirements.in",
+    "trestle_version": "5.2.0",
+    "trestle_source": "https://github.com/oscal-compass/compliance-trestle",
+    "trestle_release_commit": "18a22077a480aaaad5b1c43bd8a8e638a43acbeb",
+    "trestle_license": "Apache-2.0",
+    "installation_state": "Not inferred; inspect the environment used for each run"
+  }
+}

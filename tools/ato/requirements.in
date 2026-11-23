@@ -1,0 +1,7 @@
+# Shared optional tools; install from the generated hash-locked requirements.txt.
+compliance-trestle==5.2.0
+jsonschema==4.26.0
+pytest==9.2.0
+hypothesis==6.170.15
+pip-audit==2.10.1
+bandit==1.9.4

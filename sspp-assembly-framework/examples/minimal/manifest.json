@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "document": {
+    "title": "Synthetic Service — SSPP composition example",
+    "revision": "example-1",
+    "date": "2026-11-16",
+    "edition": "review"
+  },
+  "modules": [
+    {"id":"system-description","title":"System description","kind":"inline","path":"chapters/system.md","source":"Synthetic example, not an agency system"},
+    {"id":"boundary-diagram","title":"Boundary diagram","kind":"asset","path":"assets/boundary.svg","alt":"Browser connects to a fictional service","source":"Synthetic diagram maintained in this project"},
+    {"id":"control-example","title":"Control response example","kind":"inline","path":"chapters/control.md","source":"Synthetic owner narrative, not an approved baseline"},
+    {"id":"test-evidence","title":"Illustrative test record","kind":"attachment","path":"evidence/test-record.txt","source":"Synthetic record; not real control evidence"},
+    {"id":"nist-reference","title":"NIST OSCAL reference","kind":"reference","url":"https://pages.nist.gov/OSCAL/","verification":"not-reviewed","source":"Public reference supplied in manifest"},
+    {"id":"owner-approval","title":"Owner approval","kind":"gap","tracking":"EXAMPLE-01","owner":"Synthetic system owner","reason":"No signed approval supplied in this fictional example","source":"Example work register"}
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "modules": [
+    {
+      "id": "diagram-context",
+      "title": "System context",
+      "kind": "diagram",
+      "path": "diagrams/context.puml",
+      "source": "Synthetic editable starter",
+      "view": "context",
+      "environment": "UNFILLED",
+      "revision": "starter-1",
+      "review_status": "draft",
+      "caption": "System context \u2014 owner review required",
+      "alt": "System context: fictional viewer and service; replace with actual components",
+      "nodes": [
+        {
+          "id": "viewer",
+          "boundary": "outside"
+        },
+        {
+          "id": "service",
+          "boundary": "inside"
+        }
+      ],
+      "flows": [
+        {
+          "from": "viewer",
+          "to": "service",
+          "data": "UNFILLED request category",
+          "protocol": "UNFILLED",
+          "authentication": "UNFILLED",
+          "storage": "UNFILLED"
+        }
+      ]
+    },
+    {
+      "id": "diagram-boundary",
+      "title": "Authorization boundary",
+      "kind": "diagram",
+      "path": "diagrams/boundary.puml",
+      "source": "Synthetic editable starter",
+      "view": "boundary",
+      "environment": "UNFILLED",
+      "revision": "starter-1",
+      "review_status": "draft",
+      "caption": "Authorization boundary \u2014 owner review required",
+      "alt": "Authorization boundary: fictional viewer and service; replace with actual components",
+      "nodes": [
+        {
+          "id": "viewer",
+          "boundary": "outside"
+        },
+        {
+          "id": "service",
+          "boundary": "inside"
+        }
+      ],
+      "flows": [
+        {
+          "from": "viewer",
+          "to": "service",
+          "data": "UNFILLED request category",
+          "protocol": "UNFILLED",
+          "authentication": "UNFILLED",
+          "storage": "UNFILLED"
+        }
+      ]
+    },
+    {
+      "id": "diagram-architecture",
+      "title": "Application architecture",
+      "kind": "diagram",
+      "path": "diagrams/architecture.puml",
+      "source": "Synthetic editable starter",
+      "view": "architecture",
+      "environment": "UNFILLED",
+      "revision": "starter-1",
+      "review_status": "draft",
+      "caption": "Application architecture \u2014 owner review required",
+      "alt": "Application architecture: fictional viewer and service; replace with actual components",
+      "nodes": [
+        {
+          "id": "viewer",
+          "boundary": "outside"
+        },
+        {
+          "id": "service",
+          "boundary": "inside"
+        },
+        {
+          "id": "store",
+          "boundary": "inside"
+        }
+      ],
+      "flows": [
+        {
+          "from": "viewer",
+          "to": "service",
+          "data": "UNFILLED request category",
+          "protocol": "UNFILLED",
+          "authentication": "UNFILLED",
+          "storage": "UNFILLED"
+        },
+        {
+          "from": "service",
+          "to": "store",
+          "data": "UNFILLED records",
+          "protocol": "UNFILLED",
+          "authentication": "UNFILLED",
+          "storage": "UNFILLED retention"
+        }
+      ]
+    },
+    {
+      "id": "diagram-data-flow",
+      "title": "Data flow",
+      "kind": "diagram",
+      "path": "diagrams/data-flow.puml",
+      "source": "Synthetic editable starter",
+      "view": "data-flow",
+      "environment": "UNFILLED",
+      "revision": "starter-1",
+      "review_status": "draft",
+      "caption": "Data flow \u2014 owner review required",
+      "alt": "Data flow: fictional viewer and service; replace with actual components",
+      "nodes": [
+        {
+          "id": "viewer",
+          "boundary": "outside"
+        },
+        {
+          "id": "service",
+          "boundary": "inside"
+        }
+      ],
+      "flows": [
+        {
+          "from": "viewer",
+          "to": "service",
+          "data": "UNFILLED request category",
+          "protocol": "UNFILLED",
+          "authentication": "UNFILLED",
+          "storage": "UNFILLED"
+        }
+      ]
+    }
+  ]
+}

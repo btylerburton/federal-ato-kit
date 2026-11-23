@@ -1,0 +1,8 @@
+@startuml
+title Authorization boundary — SYNTHETIC STARTER / NOT APPROVED
+actor "External viewer" as viewer
+rectangle "Proposed boundary — review required" {
+  rectangle "Service — UNFILLED" as service
+}
+viewer --> service : UNFILLED request / protocol / auth
+@enduml

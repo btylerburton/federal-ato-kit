@@ -1,0 +1,10 @@
+{
+  "controls": [
+    {
+      "control_id": "ac-2",
+      "path": "control-statements/ac/ac-2.md",
+      "source_sha256": "2156b3d95e435a59172fc61ea9b6d44280b6a685d95dc07f9def76d1536fb50e",
+      "source_status_selections": ["Planned"]
+    }
+  ]
+}
