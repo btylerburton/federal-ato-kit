@@ -8,6 +8,10 @@ last_updated: "2026-11-19"
 
 # Diagram pipeline verification
 
+> **Historical record.** Results below were observed in the source repository before consolidation into
+> portable-ato-kit, with paths and tools of that environment. They do not verify this repository; live
+> reruns are tracked as PKG-04 in `../docs/kit/packaging-work.json`.
+
 OpenCode AI agent; approved diagram integration increment. Source and generated files were
 saved incrementally. The session heartbeat runs at five-minute intervals and is stopped on
 completion. Temporary renderer/test directories are cleaned automatically; audit and package

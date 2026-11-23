@@ -9,8 +9,9 @@ last_updated: "2026-11-16"
 # Modular SSPP assembly framework
 
 Build an SSPP from versioned modules with explicit provenance, predictable inclusion and
-repeatable output. Prepared with OpenCode AI assistance. This directory is temporary staging
-for a future repository; no new remote repository has been created.
+repeatable output. Prepared with OpenCode AI assistance. It lives in the consolidated portable-ato-kit repository
+(see the [root README](../README.md)); no remote repository has been created and the
+publication license decision is pending.
 
 ## Architecture, boundary and data-flow pipeline
 
@@ -18,10 +19,11 @@ New team projects include four editable PlantUML starter views and `diagrams.jso
 `tools/pipeline.py` renders pinned local SVG/PNG, composes the document, exports DOCX and
 checks every figure's exact PNG bytes inside the DOCX. See [diagram-pipeline.md](diagram-pipeline.md).
 The [synthetic diagram example](examples/diagrams/manifest.json) runs independently of America.gov.
-An inspected demo is available at `build/diagram-demo/document.docx` after the example build.
+The example build writes its demo DOCX under the output directory you choose; `build/` is git-ignored.
 
-Diagram tests require `PLANTUML_TEST_JAR` and `PANDOC_TEST_BIN`; all 23 framework tests were
-executed with those tools and the existing Trestle integration environment.
+Diagram tests require `PLANTUML_TEST_JAR` and `PANDOC_TEST_BIN`; without them the live cases
+are skipped. Historical note: all 23 source-repository framework tests were once executed with
+those tools; this repository's own live run is tracked as PKG-04 in `../docs/kit/packaging-work.json`.
 
 ## Team template and all-control shells
 
@@ -66,9 +68,12 @@ and Trestle adapter into one end-to-end manifest pipeline.
 
 ### federal-ato-kit integration
 
+In the consolidated repository the toolkit sits beside this directory and is used by default.
+Set `FEDERAL_ATO_KIT` only to use a different copy; an invalid explicit value fails with no fallback.
+
 ```sh
-export FEDERAL_ATO_KIT=/absolute/path/to/federal-ato-kit
 python3 tools/kit.py check
+# optional override: export FEDERAL_ATO_KIT=/absolute/path/to/other/kit
 python3 tools/kit.py verify package --package /absolute/path/to/project/docs/compliance
 ```
 
@@ -188,6 +193,6 @@ team shell generation and complete supporting-document ingestion.
 
 Move the generic tools, design, tests and synthetic example together. Keep system-specific
 SSPP content, contacts, provider records, evidence and credentials in consuming projects.
-Select a repository name/license and pin the renderer/toolchain before publishing releases.
-The existing `federal-ato-kit/` handles evidence and integrity checks; define its integration
-contract rather than copying its code into this framework.
+License selection and renderer/toolchain pinning remain open (see `../docs/kit/packaging-work.json`).
+The evidence toolkit in `../tools/ato/` handles integrity checks; the framework delegates to it
+through `tools/kit.py` rather than copying its code.

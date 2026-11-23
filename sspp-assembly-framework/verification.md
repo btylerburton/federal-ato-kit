@@ -8,6 +8,10 @@ last_updated: "2026-11-16"
 
 # Verification
 
+> **Historical record.** Results below were observed in the source repository before consolidation into
+> portable-ato-kit, with paths and tools of that environment. They do not verify this repository; live
+> reruns are tracked as PKG-04 in `../docs/kit/packaging-work.json`.
+
 OpenCode AI agent. Mode: user-authorized draft/scoped prototype, delivered in small disk-backed
 increments. Scope: semantic comparison, reusable framework design/README/work register and
 offline Markdown composition prototype. Actual session tools record command executions.

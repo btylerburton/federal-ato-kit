@@ -8,6 +8,10 @@ last_updated: "2026-11-17"
 
 # Team template verification
 
+> **Historical record.** Results below were observed in the source repository before consolidation into
+> portable-ato-kit, with paths and tools of that environment. They do not verify this repository; live
+> reruns are tracked as PKG-04 in `../docs/kit/packaging-work.json`.
+
 OpenCode AI agent; approved FW-09 implementation. Work began November 16 and completed
 November 17. The example's declared November 16 document date remains fixed for reproducibility.
 
