@@ -12,24 +12,14 @@ from repository_intake import inspect, questions, checkout_root
 from scaffold import scaffold, markdown_file
 from diagrams import validate as validate_diagram
 from inheritance import answers_for, generated_files, ask as ask_inheritance
+from wizard_session import answer_issues, normalize, atomic_json, field_issue
 
 
 def require_answers(answers):
-    answers_for(answers)
-    for key in ('system_name', 'system_owner', 'environment', 'boundary_summary', 'date'):
-        if not isinstance(answers.get(key), str) or not answers[key].strip() or '\n' in answers[key]:
-            raise ValueError(f'Clarification required: {key}')
-    if answers.get('scope_confirmed') is not True:
-        raise ValueError('Owner must explicitly confirm the draft selection')
-    if not isinstance(answers.get('data_categories'), list) or not answers['data_categories'] or any(
-            not isinstance(v, str) or not v.strip() for v in answers['data_categories']):
-        raise ValueError('Clarification required: data_categories')
-    if answers.get('mode') not in {'lato', 'ato'}:
-        raise ValueError('Clarification required: mode')
-    if answers['mode'] == 'ato' and answers.get('baseline') not in {'low', 'moderate', 'high'}:
-        raise ValueError('Clarification required: baseline')
-    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', answers['date']):
-        raise ValueError('Date must be YYYY-MM-DD')
+    answers.update(normalize(answers))
+    issues = answer_issues(answers, include_topology=False)
+    if issues:
+        raise ValueError('; '.join(f'{key}: {value}' for key, value in issues.items()))
 
 
 def topology_files(answers):
@@ -78,7 +68,9 @@ def intake(repository, output):
     if output.resolve().is_relative_to(repository.resolve()) or repository.resolve().is_relative_to(output.resolve()):
         raise ValueError('Intake output must be outside the application checkout')
     if output.exists() and any(output.iterdir()):
-        raise ValueError('Intake output must be new or empty; preserve previous answers')
+        raise ValueError('Intake output must be new or empty; preserve previous answers. '
+                         'Resume with tui --repository <repo> --workspace <parent-of-intake>, '
+                         'or ask --answers <intake>/answers.json')
     output.mkdir(parents=True, exist_ok=True)
     (output / 'repository-observations.json').write_bytes(json_bytes(report))
     (output / 'questions.json').write_bytes(json_bytes({'questions': questions()}))
@@ -89,7 +81,8 @@ def intake(repository, output):
 
 
 def ask(answer_path, prompt=input):
-    answers = load_json(answer_path)
+    answers = normalize(load_json(answer_path))
+    atomic_json(answer_path, answers)
     for question in questions():
         key = question['id']
         if key == 'baseline' and answers.get('mode') != 'ato':
@@ -97,16 +90,24 @@ def ask(answer_path, prompt=input):
         if key == 'topology' or question.get('section') == 'inheritance':
             continue
         existing = answers.get(key)
-        if existing not in (None, '', [], False):
+        if not field_issue(key, existing, answers):
             continue
-        value = prompt(question['question'] + ' ').strip()
-        if question.get('type') == 'boolean':
-            answers[key] = value.lower() in {'yes', 'y'}
-        elif question.get('type') == 'string-list':
-            answers[key] = [part.strip() for part in value.split(',') if part.strip()]
-        else:
-            answers[key] = value
-        answer_path.write_bytes(json_bytes(answers))
+        while True:
+            value = prompt(question['question'] + ' ').strip()
+            if question.get('type') == 'boolean':
+                value = value.lower() in {'yes', 'y'}
+            elif question.get('type') == 'string-list':
+                value = [part.strip() for part in value.split(',') if part.strip()]
+            elif key in {'mode', 'baseline'}:
+                value = value.lower()
+            elif key == 'date' and not value:
+                value = normalize({'date': ''})['date']
+            error = field_issue(key, value, answers)
+            if not error:
+                answers[key] = value
+                atomic_json(answer_path, answers)
+                break
+            print(error)
     if not answers.get('topology', {}).get('nodes'):
         value = prompt('Topology JSON file (nodes and flows; see wizard guide example): ').strip()
         if value:
@@ -201,9 +202,20 @@ def main():
             p.add_argument('--plantuml-jar', type=Path)
             p.add_argument('--pandoc', type=Path)
     p = sub.add_parser('ask');p.add_argument('--answers', type=Path, required=True)
+    p = sub.add_parser('tui', help='Start or resume the optional Textual interface')
+    p.add_argument('--repository', type=Path, required=True)
+    p.add_argument('--workspace', type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == 'intake':
+        if args.command == 'tui':
+            try:
+                from wizard_tui import launch
+            except ModuleNotFoundError as error:
+                if error.name not in {'textual', 'rich'}:
+                    raise
+                raise ValueError('Textual UI not installed. Run bash setup-tui.sh, then use .venv-tui/bin/python.') from error
+            launch(args.repository, args.workspace)
+        elif args.command == 'intake':
             intake(args.repository, args.output)
             print('QUESTIONS_READY: review questions.json and fill answers.json; no application code executed')
         elif args.command == 'ask':

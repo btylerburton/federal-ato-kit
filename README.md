@@ -3,7 +3,7 @@ title: "Portable ATO Kit"
 description: "Reusable evidence-readiness toolkit and modular SSPP assembly framework"
 status: draft
 tier: 1
-last_updated: "2026-11-23"
+last_updated: "2026-11-24"
 ---
 
 # Portable ATO Kit
@@ -62,6 +62,42 @@ python3 "$KIT/sspp-assembly-framework/tools/build.py" \
 
 The first command intentionally exits 2 (the example claims are unevidenced). The second
 writes `document.md`, an inventory and copied assets to a directory you choose.
+
+## Try the wizard on a sibling repository
+
+Example: `searchgov-spider` is cloned beside this kit. Install the optional pinned Textual
+interface once, then use the same command to start **or resume**:
+
+```sh
+bash setup-tui.sh
+.venv-tui/bin/python sspp-assembly-framework/tools/wizard.py tui \
+  --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+```
+
+The UI has section progress, Back/Next, inline validation, autosave, Save & Exit and component/
+flow forms. Existing intake answers are backed up before migration; uppercase `LATO` is
+normalized and an empty date defaults to today once. Existing dates and owner answers remain
+unchanged. A placeholder such as `default` is not accepted as an actual boundary description.
+Review the proposed topology and scope before using Generate draft. Ctrl+S saves; Ctrl+Q saves
+and exits. The command runs locally and does not launch an agent or execute application scripts.
+
+The dependency-free CLI remains available. To resume its saved answers without the TUI, run
+`python3 sspp-assembly-framework/tools/wizard.py ask --answers ../searchgov-spider-ato/intake/answers.json`.
+Do not rerun `intake` over existing answers. Once required answers are complete:
+
+```sh
+python3 sspp-assembly-framework/tools/wizard.py generate \
+  --repository ../searchgov-spider \
+  --answers ../searchgov-spider-ato/intake/answers.json \
+  --output ../searchgov-spider-ato/project
+```
+
+Editable control statements appear under
+`../searchgov-spider-ato/project/controls/<family>/*.response.md`, alongside generated
+`*.requirement.md` files. Chapters, proposed diagram sources and candidate inheritance
+reports live in the same project directory. DOCX rendering additionally requires the local
+tools described in the [wizard guide](docs/kit/wizard.md). The kit supplies a draft, not a
+completed assessment or authorization. See [AGENTS.md](AGENTS.md) for the agent-assisted flow.
 
 ## Optional setup
 

@@ -3,7 +3,7 @@ title: "Repository-to-SSPP draft wizard"
 description: "Guided intake, selected control library and diagrams for LATO or full ATO preparation"
 status: draft
 tier: 2
-last_updated: "2026-11-23"
+last_updated: "2026-11-24"
 ---
 
 # Repository-to-SSPP draft wizard
@@ -15,6 +15,33 @@ by software. The workflow automates inventory, selection, scaffolding and export
 those missing facts visible.
 
 ## Run it
+
+### Recommended: resumable terminal UI
+
+```sh
+bash setup-tui.sh
+.venv-tui/bin/python sspp-assembly-framework/tools/wizard.py tui \
+  --repository /path/to/application --workspace /path/to/application-ato
+```
+
+Use the same command every time. The UI creates `intake/` for a new workspace or adopts existing
+wizard intake, retaining a byte-for-byte backup before normalization. Existing answers and
+document dates are preserved; empty dates default to today and uppercase choices normalize.
+System name defaults to a clearly labeled repository-name suggestion. Baseline, owner approval,
+data categories and topology are never guessed. Repository association is persisted after
+legacy adoption; a mismatched session or concurrent disk edit refuses overwrite.
+
+System → Scope → Inheritance → Topology → Review panels show remaining errors. Fields autosave,
+even when incomplete, and generation stays disabled until required answers are valid. Add nodes
+and flows through forms; remove nodes with connected flows explicitly. Ctrl+S saves and Ctrl+Q
+saves/exits. Background generation disables editing and reports the project path or failure.
+This UI creates the review project; optional DOCX/diagram rendering still uses `pipeline.py`.
+
+The previous `boundary_summary: "default"` input is retained but flagged for clarification.
+The UI does not invent a topology to make generation pass. Owner placeholders must be explicit
+decisions, not inferred facts. The diagram view-semantics limitations tracked separately remain.
+
+### Dependency-free CLI and agent use
 
 ```sh
 KIT=/absolute/path/to/federal-ato-kit

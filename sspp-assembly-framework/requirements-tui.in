@@ -1,0 +1,2 @@
+# Optional local terminal interface; core CLI remains standard-library only.
+textual==8.2.8

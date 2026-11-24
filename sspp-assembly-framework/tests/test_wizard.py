@@ -109,6 +109,15 @@ class WizardTests(unittest.TestCase):
         self.assertEqual(result['system_owner'], 'Example owner')
         self.assertEqual(len(prompts), 1)
 
+    def test_cli_asks_missing_inheritance_after_normalization(self):
+        prompts=[]
+        def answer(question):
+            prompts.append(question)
+            return 'unknown'
+        result=wizard.ask(self.answers,answer)
+        self.assertEqual(len(prompts),5)
+        self.assertEqual(set(result['inheritance'].values()),{'unknown'})
+
     def test_intake_cannot_write_into_application(self):
         with self.assertRaisesRegex(ValueError, 'outside the application'):
             wizard.intake(self.repo, self.repo / 'intake')
