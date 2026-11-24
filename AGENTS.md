@@ -21,8 +21,7 @@ Assuming this kit and `searchgov-spider` are sibling directories, run from this 
 # One-time optional UI install, with dependency download approval:
 bash setup-tui.sh
 # Same command starts a new session or resumes saved intake:
-.venv-tui/bin/python sspp-assembly-framework/tools/wizard.py tui \
-  --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+./ato-wizard ../searchgov-spider
 ```
 
 The command starts a local Textual UI, not another agent. It autosaves answers, remembers the
@@ -31,6 +30,14 @@ approval, deployment or inheritance from a default. In an agent session without 
 terminal, read existing questions/answers and ask the user in the harness; do not launch a TUI
 and claim the user saw it. The dependency-free `intake`/`ask` commands remain available; resume
 existing answers with `ask`, not a second `intake`.
+
+The root launcher first offers Text draft / Diagrams and workspace selection. Default new
+location is lowercase `<repo>/docs`; if occupied, use `docs-<unix-timestamp>`. Resume only
+recognized wizard-owned internal workspaces, or use explicit `--workspace` for an existing
+external one. Existing docs content is not authorization to adopt it. The launcher writes a
+checkout-bound `.ato-workspace.json` only on explicit selection of an empty/new location.
+Application paths outside that workspace remain read-only. Do not use generated workspace
+content as source evidence: the discovery/citation readers exclude recognized workspaces.
 
 For an unfamiliar application, load its AGENTS.md when present. Do not execute application
 scripts, install dependencies, inspect secret/environment-file contents or contact live

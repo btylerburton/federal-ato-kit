@@ -70,9 +70,34 @@ interface once, then use the same command to start **or resume**:
 
 ```sh
 bash setup-tui.sh
-.venv-tui/bin/python sspp-assembly-framework/tools/wizard.py tui \
-  --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+./ato-wizard ../searchgov-spider
 ```
+
+The launcher offers **Text draft** and **Diagrams**, keeping those workflows separate inside
+one entry screen. It resolves the checkout, shows local tool availability, and offers to resume
+an existing wizard-owned workspace. For a new workspace click **New workspace**: it proposes
+`<repo>/docs` when that name is unused, otherwise `<repo>/docs-<unix-timestamp>`. Existing
+documentation is not adopted or overwritten. A timestamp collision gets a numeric suffix.
+Nothing is created until you choose a workflow.
+
+To keep using an existing external workspace:
+
+```sh
+./ato-wizard ../searchgov-spider --workspace ../searchgov-spider-ato
+```
+
+Exiting either workflow returns to the launcher. Quit there to end the session. A claimed
+in-repo workspace contains `.ato-workspace.json`, tied to the checkout path, plus `intake/`,
+`project/`, `diagramming/` and optional `export/`. The marker is an ownership convention, not
+an authorization or secret store. It permits writes only to the selected documentation area.
+Generated docs are excluded from subsequent source discovery. Git may show these documents
+as new files; the launcher does not automatically commit or change repository ignore rules.
+Moving/cloning a marked workspace requires deliberate repository-path reconciliation.
+
+Run the launcher by absolute path from any directory. `--runner`, `--plantuml-jar`, and
+`--pandoc` pass explicit optional diagram tools through; no model or dependency is downloaded
+automatically. Missing Textual yields the setup command. Run `./ato-wizard --help` without setup
+to inspect usage.
 
 The text UI has section progress, Back/Next, inline validation, autosave and Save & Exit.
 Diagramming is a separate proposal/review flow after an agent has inspected the source;
@@ -104,6 +129,13 @@ completed assessment or authorization. See [AGENTS.md](AGENTS.md) for the agent-
 ## Separate diagramming after source review
 
 **Recommended start/resume command:**
+
+```sh
+./ato-wizard ../searchgov-spider
+```
+
+Select **Diagrams**. Use `--workspace ../searchgov-spider-ato` to reopen the external workspace
+used by earlier examples. Advanced direct commands remain supported:
 
 ```sh
 .venv-tui/bin/python sspp-assembly-framework/tools/diagram_flow.py tui \

@@ -21,8 +21,7 @@ those missing facts visible.
 
 ```sh
 bash setup-tui.sh
-.venv-tui/bin/python sspp-assembly-framework/tools/wizard.py tui \
-  --repository /path/to/application --workspace /path/to/application-ato
+./ato-wizard /path/to/application
 ```
 
 Use the same command every time. The UI creates `intake/` for a new workspace or adopts existing
@@ -31,6 +30,14 @@ document dates are preserved; empty dates default to today and uppercase choices
 System name defaults to a clearly labeled repository-name suggestion. Baseline, owner approval,
 data categories and topology are never guessed. Repository association is persisted after
 legacy adoption; a mismatched session or concurrent disk edit refuses overwrite.
+
+The first screen selects **Text draft** or **Diagrams** and an existing/new workspace.
+New work defaults to lowercase `<repo>/docs`, or `docs-<unix-timestamp>` if the name is occupied.
+Nothing is written until a workflow is launched. Existing unrelated documentation is preserved.
+To resume an older external directory, pass `--workspace /path/to/application-ato`. Direct
+`wizard.py tui --repository ... --workspace ...` commands still work with external or explicitly
+claimed internal workspaces. Output children inside a claimed workspace are `intake`, `project`
+and `export`; application source outside it remains untouched.
 
 System → Scope → Inheritance → Review panels show remaining errors.
 The Inheritance panel has a `? Help` button beside the four yes/no/unknown questions (egress
@@ -69,8 +76,8 @@ python3 "$KIT/sspp-assembly-framework/tools/pipeline.py" /path/to/sspp-project/m
 The `ask` command is interactive. Agents can instead read `questions.json`, ask the user in their
 own interface and write `answers.json`. Answers are saved incrementally. Generation is offline;
 Pandoc is provisioned separately for DOCX. Java/fonts and pinned PlantUML are needed only
-when rendering diagram source modules. Outputs live outside the application checkout; no
-source code is modified.
+when rendering diagram source modules. Outputs live in the selected external or wizard-owned
+documentation workspace; application source outside that workspace is not modified.
 
 ## Clarifications that cannot be inferred from repository paths
 

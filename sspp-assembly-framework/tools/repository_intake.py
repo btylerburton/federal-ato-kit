@@ -1,6 +1,7 @@
 """Read-only Git path inventory; do not execute repository code or read secret contents."""
 import subprocess
 from pathlib import Path
+from workspace_paths import excluded_workspaces
 
 SKIP_PARTS = {'.git', 'node_modules', '.venv', '.venv-ato', 'vendor', 'dist', 'build', '__pycache__'}
 
@@ -24,9 +25,10 @@ def inspect(repository):
     revision = git('rev-parse', 'HEAD').decode().strip()
     paths = git('ls-files', '-z').decode('utf-8').split('\0')
     safe = []
+    excluded = excluded_workspaces(repository)
     for name in filter(None, paths):
         p = Path(name)
-        if p.is_absolute() or '..' in p.parts or any(part in SKIP_PARTS for part in p.parts):
+        if p.is_absolute() or '..' in p.parts or p.parts[0] in excluded or any(part in SKIP_PARTS for part in p.parts):
             continue
         if p.name.startswith(('.env', '.dev.vars')) or p.suffix.lower() in {'.pem', '.key', '.p12', '.pfx'}:
             continue

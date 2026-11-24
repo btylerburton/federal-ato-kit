@@ -9,6 +9,7 @@ from build import load_json, sha, json_bytes, validate
 from diagram_flow import read_session, proposal_for, pending, check_generated
 from scaffold import previous_state, scaffold
 from wizard_session import atomic_json
+from workspace_paths import validate_output
 
 
 def attach(repository, workspace, project):
@@ -28,8 +29,7 @@ def attach(repository, workspace, project):
     if any(p.is_symlink() for p in [project, *project.parents]) or any(p.is_symlink() for p in project.rglob('*')):
         raise ValueError('Attachment target cannot contain symlinks')
     project = project.resolve()
-    if project.is_relative_to(repository) or repository.is_relative_to(project):
-        raise ValueError('Attachment target must be outside the application checkout')
+    validate_output(repository, project, 'project')
     if root.is_relative_to(project) or project.is_relative_to(root):
         raise ValueError('Diagram session and text project must be separate directories')
     previous_state(project)  # Check generated manifest/input ownership before mutation.

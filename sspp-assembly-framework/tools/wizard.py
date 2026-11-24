@@ -11,6 +11,7 @@ from repository_intake import inspect, questions, checkout_root
 from scaffold import scaffold, markdown_file
 from inheritance import generated_files, ask as ask_inheritance
 from wizard_session import answer_issues, normalize, atomic_json, field_issue
+from workspace_paths import validate_output
 
 
 def require_answers(answers):
@@ -23,8 +24,7 @@ def require_answers(answers):
 def intake(repository, output):
     repository = checkout_root(repository)
     report = inspect(repository)
-    if output.resolve().is_relative_to(repository.resolve()) or repository.resolve().is_relative_to(output.resolve()):
-        raise ValueError('Intake output must be outside the application checkout')
+    output = validate_output(repository, output, 'intake')
     if output.exists() and any(output.iterdir()):
         raise ValueError('Intake output must be new or empty; preserve previous answers. '
                          'Resume with tui --repository <repo> --workspace <parent-of-intake>, '
@@ -78,8 +78,7 @@ def generate(repository, answer_path, output):
     catalog, selection = selected_catalog(answers['mode'], answers.get('baseline'))
     inherited = generated_files(answers, catalog)
     observations = inspect(repository)
-    if output.resolve().is_relative_to(repository.resolve()) or repository.resolve().is_relative_to(output.resolve()):
-        raise ValueError('Generate into a separate project directory, outside the application checkout')
+    output = validate_output(repository, output, 'project')
     if output.exists() and any(output.iterdir()) and not (output / 'wizard-state.json').is_file():
         raise ValueError('Existing output is not a wizard-owned project; choose a new directory')
     # Build all selected shells; full catalog remains available from the library and scaffold tool.
@@ -169,8 +168,7 @@ def main():
                 raise ValueError('--export requires --pandoc; --plantuml-jar is needed only for registered diagram source modules')
             if args.export:
                 app_root = checkout_root(args.repository)
-                if args.export.resolve().is_relative_to(app_root) or app_root.is_relative_to(args.export.resolve()):
-                    raise ValueError('Export must be outside the application checkout')
+                validate_output(app_root, args.export, 'export')
             report = generate(args.repository, args.answers, args.output)
             if args.export:
                 from pipeline import pipeline

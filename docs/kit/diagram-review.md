@@ -26,8 +26,10 @@ python3 -B sspp-assembly-framework/tools/diagram_flow.py prepare \
   --repository ../application --workspace ../application-ato
 ```
 
-`start` is an alias for `prepare`. Both safely resume an existing session. The workspace must
-be outside **every Git checkout**, including the application and kit, and cannot use symlinks.
+`start` is an alias for `prepare`. Both safely resume an existing session. Use the root
+`./ato-wizard <repo>` launcher to select a new owned in-repo `docs`/`docs-timestamp` workspace,
+or supply an external directory outside every checkout. In-repo paths require the launcher
+ownership marker; arbitrary application folders are rejected. Workspaces cannot use symlinks.
 The flow owns only `<workspace>/diagramming/`; an existing `<workspace>/intake/` is independent.
 
 `diagramming/session.json` records the checkout root, exact `HEAD` commit and a filtered list

@@ -9,6 +9,7 @@ from pathlib import Path
 from build import json_bytes, load_json, sha
 from inheritance import answers_for, defaults
 from repository_intake import checkout_root, inspect, questions
+from workspace_paths import validate_workspace
 
 SECTIONS = ('system', 'scope', 'inheritance', 'review')
 SYSTEM = {'system_name', 'system_owner', 'environment', 'date'}
@@ -136,13 +137,7 @@ def atomic_json(path, value):
 class WizardSession:
     def __init__(self, repository, workspace, today=None):
         self.repository = checkout_root(repository)
-        self.workspace = workspace.absolute()
-        # Reject aliases before resolve so an existing symlink cannot redirect writes.
-        if any(p.is_symlink() for p in [self.workspace, *self.workspace.parents]):
-            raise ValueError('Workspace and its parents must not be symlinks')
-        self.workspace = self.workspace.resolve()
-        if self.workspace.is_relative_to(self.repository) or self.repository.is_relative_to(self.workspace):
-            raise ValueError('Workspace must be outside the application checkout')
+        self.workspace = validate_workspace(self.repository, workspace)
         self.answers_path = self.workspace / 'intake/answers.json'
         self.state_path = self.workspace / 'intake/session.json'
         intake = self.answers_path.parent

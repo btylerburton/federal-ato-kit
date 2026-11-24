@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 from build import json_bytes, load_json, sha, validate
 from diagrams import check_source, validate as validate_diagram
 from repository_intake import checkout_root
+from workspace_paths import validate_workspace, excluded_workspaces
 
 FORMAT = 'diagram-review-v1'
 NODE_FIELDS = ('title', 'boundary')
@@ -47,29 +48,21 @@ def safe_source(name):
 
 def source_tree(repository, revision):
     records = {}
+    excluded = excluded_workspaces(repository)
     for entry in git(repository, 'ls-tree', '-rz', revision).split(b'\0'):
         if not entry:
             continue
         header, raw_name = entry.split(b'\t', 1)
         mode, kind, oid = header.decode().split()
         name = raw_name.decode('utf-8')
-        if kind == 'blob' and mode in {'100644', '100755'} and safe_source(name):
+        if kind == 'blob' and mode in {'100644', '100755'} and safe_source(name) and PurePosixPath(name).parts[0] not in excluded:
             records[name] = oid
     return records
 
 
 def workspace_root(repository, workspace):
     repository = checkout_root(repository)
-    workspace = workspace.absolute()
-    if any(p.is_symlink() for p in (workspace, *workspace.parents)):
-        raise ValueError('Workspace cannot use symlinks')
-    workspace = workspace.resolve()
-    if workspace.is_relative_to(repository) or repository.is_relative_to(workspace):
-        raise ValueError('Workspace must be outside the application checkout')
-    # Also reject a sibling path within any other checkout (including this kit).
-    for parent in (workspace, *workspace.parents):
-        if (parent / '.git').exists():
-            raise ValueError('Workspace must be outside every Git checkout')
+    workspace = validate_workspace(repository, workspace)
     root = workspace / 'diagramming'
     if root.is_symlink() or (root.exists() and any(p.is_symlink() for p in root.rglob('*'))):
         raise ValueError('Diagram workspace contains a symlink')
