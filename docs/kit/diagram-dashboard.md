@@ -39,6 +39,11 @@ a clear conflict; preserve it and use a new workspace for a changed analysis.
 
 ## Source analysis: manual handoff or configured runner
 
+A person can also author the proposal from source using the documented JSON contract; an LLM
+is not required by the importer. The current UI does not yet provide a manual proposal builder.
+See [agent/offline assessment](agent-offline-assessment.md) for the current restricted and
+disconnected-operation limits and proposed first-class manual mode.
+
 Without a runner, give your coding agent the request displayed in Overview (also saved as
 `diagramming/dashboard-agent-request.md`). The agent performs the authorized source-review pass
 and writes `<workspace>/proposal.json`. Refresh validates and imports it automatically.
