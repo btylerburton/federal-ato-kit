@@ -167,7 +167,7 @@ def module(key, title, path, source):
     return {"id": key, "title": title, "kind": "inline", "path": path, "source": source}
 
 
-def plan(output, full, selected, document, state):
+def plan(output, full, selected, document, state, include_diagrams=True):
     identities = dict(state["identities"])
     generated, authored, modules, index = {}, {}, [], []
     for key, title in CHAPTERS + APPENDICES:
@@ -178,12 +178,13 @@ def plan(output, full, selected, document, state):
     authored["README.md"] = team_readme()
     from diagram_starters import starters
     diagram_files, default_diagrams = starters()
-    authored.update(diagram_files)
-    diagram_config = load_json(output / "diagrams.json") if (output / "diagrams.json").exists() else {"modules": default_diagrams}
+    if include_diagrams:
+        authored.update(diagram_files)
+    diagram_config = load_json(output / "diagrams.json") if (output / "diagrams.json").exists() else {"modules": default_diagrams if include_diagrams else []}
     if not isinstance(diagram_config, dict) or not isinstance(diagram_config.get("modules"), list):
         raise ValueError("diagrams.json must contain a modules array")
     required_views = {"context", "boundary", "architecture", "data-flow"}
-    if not required_views <= {m.get("view") for m in diagram_config["modules"]}:
+    if include_diagrams and not required_views <= {m.get("view") for m in diagram_config["modules"]}:
         raise ValueError("Team template needs context, boundary, architecture and data-flow views")
     for key, title in CHAPTERS:
         modules.append(module(key, title, f"chapters/{key}.md", "Team-authored chapter"))
@@ -213,6 +214,11 @@ def plan(output, full, selected, document, state):
     if not isinstance(supporting, dict) or not isinstance(supporting.get("modules"), list):
         raise ValueError("supporting.json must contain a modules array")
     modules.extend(supporting["modules"])
+    if not include_diagrams and not diagram_config['modules'] and not any(m.get('id') == 'diagram-review-record' for m in supporting['modules']):
+        modules.append({'id': 'diagram-readiness', 'title': 'Diagrams pending separate review', 'kind': 'gap',
+                        'tracking': 'TEAM-DIAGRAM-01', 'owner': 'Architecture owner',
+                        'reason': 'Run a source-cited agent proposal and the separate diagramming flow; text configuration is complete without topology.',
+                        'source': 'Separate diagram review workflow'})
     modules.append({"id": "template-readiness", "title": "Template readiness", "kind": "gap",
                     "tracking": "TEAM-READY-01", "owner": "System owner and ISSO",
                     "reason": "Generated shells are unfilled until the team supplies and reviews implementation evidence.",
@@ -260,7 +266,7 @@ belongs in `build/`, not among authoring sources. This workspace is not itself a
 """)
 
 
-def scaffold(catalog, catalog_sha, output, title, date, selection=None, selection_sha=None):
+def scaffold(catalog, catalog_sha, output, title, date, selection=None, selection_sha=None, include_diagrams=True):
     output = output.absolute()
     raw, full_catalog = pinned(catalog, catalog_sha)
     full = collect_controls(full_catalog)
@@ -277,7 +283,7 @@ def scaffold(catalog, catalog_sha, output, title, date, selection=None, selectio
     state = previous_state(output)
     document = load_json(output / "project.json") if (output / "project.json").exists() else {
         "title": title, "date": date, "revision": "draft-1", "edition": "review"}
-    generated, authored, identities, additions = plan(output, full, selected, document, state)
+    generated, authored, identities, additions = plan(output, full, selected, document, state, include_diagrams)
     generated["inputs/catalog.json"] = raw
     if selection_raw:
         generated["inputs/selected-catalog.json"] = selection_raw

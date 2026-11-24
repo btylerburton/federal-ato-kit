@@ -74,11 +74,13 @@ bash setup-tui.sh
   --repository ../searchgov-spider --workspace ../searchgov-spider-ato
 ```
 
-The UI has section progress, Back/Next, inline validation, autosave, Save & Exit and component/
-flow forms. Existing intake answers are backed up before migration; uppercase `LATO` is
+The text UI has section progress, Back/Next, inline validation, autosave and Save & Exit.
+Diagramming is a separate proposal/review flow after an agent has inspected the source;
+manual topology no longer blocks text configuration or generation. Existing intake answers
+are backed up before migration; uppercase `LATO` is
 normalized and an empty date defaults to today once. Existing dates and owner answers remain
 unchanged. A placeholder such as `default` is not accepted as an actual boundary description.
-Review the proposed topology and scope before using Generate draft. Ctrl+S saves; Ctrl+Q saves
+Review the text scope before using Generate draft. Ctrl+S saves; Ctrl+Q saves
 and exits. The command runs locally and does not launch an agent or execute application scripts.
 
 The dependency-free CLI remains available. To resume its saved answers without the TUI, run
@@ -98,6 +100,27 @@ Editable control statements appear under
 reports live in the same project directory. DOCX rendering additionally requires the local
 tools described in the [wizard guide](docs/kit/wizard.md). The kit supplies a draft, not a
 completed assessment or authorization. See [AGENTS.md](AGENTS.md) for the agent-assisted flow.
+
+## Separate diagramming after source review
+
+The text wizard no longer has a Topology screen. First ask an authorized agent/LLM to inspect
+the source and propose nodes/relationships with revision/path citations and uncertainties.
+Then use the [standalone diagram review flow](docs/kit/diagram-review.md):
+
+```sh
+python3 sspp-assembly-framework/tools/diagram_flow.py prepare \
+  --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+python3 sspp-assembly-framework/tools/diagram_flow.py import \
+  --repository ../searchgov-spider --workspace ../searchgov-spider-ato \
+  --proposal ../searchgov-spider-ato/proposal.json
+python3 sspp-assembly-framework/tools/diagram_flow.py review \
+  --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+```
+
+The proposal is an agent-produced input, not a file inferred by `prepare`. Review asks only
+pending or uncertain fields and preserves answers. After explicit human review, generate/render
+the independent diagrams and attach them with `attach_diagrams.py`. The guide gives the full
+commands and a proposal example. No remote LLM call is made by this CLI.
 
 ## Optional setup
 

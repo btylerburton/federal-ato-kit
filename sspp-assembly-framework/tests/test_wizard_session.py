@@ -36,7 +36,7 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(session.answers['system_owner'],'PT Barnum')
         self.assertEqual(session.answers['boundary_summary'],'default')
         self.assertIn('boundary_summary',session.issues())
-        self.assertIn('topology',session.issues())
+        self.assertNotIn('topology',session.issues())
         self.assertEqual(session.current_step,'scope')
         self.assertEqual(next(path.parent.glob('answers.backup-*.json')).read_bytes(),before)
         resumed=WizardSession(self.repo,self.workspace,today=date(2026,11,25))
@@ -57,6 +57,18 @@ class SessionTests(unittest.TestCase):
         self.assertFalse(session.answers['scope_confirmed'])
         self.assertEqual(session.answers['mode'],'')
         self.assertEqual(session.answers['topology'],{'nodes':[],'flows':[]})
+
+    def test_legacy_topology_step_resumes_review_and_keeps_topology_bytes(self):
+        session=WizardSession(self.repo,self.workspace)
+        answers=json.loads(session.answers_path.read_text())
+        answers['topology']={'legacy_data':'preserve without requiring repair'}
+        session.answers_path.write_text(json.dumps(answers))
+        state=json.loads(session.state_path.read_text());state['step']='topology'
+        session.state_path.write_text(json.dumps(state))
+        resumed=WizardSession(self.repo,self.workspace)
+        self.assertEqual(resumed.current_step,'review')
+        self.assertEqual(resumed.answers['topology'],answers['topology'])
+        self.assertNotIn('topology',resumed.issues())
 
     def test_external_answer_edit_is_not_overwritten(self):
         session=WizardSession(self.repo,self.workspace)

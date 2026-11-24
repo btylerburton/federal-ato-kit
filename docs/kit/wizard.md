@@ -9,7 +9,8 @@ last_updated: "2026-11-24"
 # Repository-to-SSPP draft wizard
 
 Point the wizard at a Git repository, answer the missing system-context questions, and generate
-a LATO-reference or full-ATO-baseline **review draft** with control guidance and proposed diagrams.
+a LATO-reference or full-ATO-baseline **text review draft** with control guidance. Diagramming
+is a separate source-proposal and clarification flow; it does not block text generation.
 An authorization decision, signed approval, and verified operational evidence are not generated
 by software. The workflow automates inventory, selection, scaffolding and export while keeping
 those missing facts visible.
@@ -31,15 +32,23 @@ System name defaults to a clearly labeled repository-name suggestion. Baseline, 
 data categories and topology are never guessed. Repository association is persisted after
 legacy adoption; a mismatched session or concurrent disk edit refuses overwrite.
 
-System → Scope → Inheritance → Topology → Review panels show remaining errors. Fields autosave,
-even when incomplete, and generation stays disabled until required answers are valid. Add nodes
-and flows through forms; remove nodes with connected flows explicitly. Ctrl+S saves and Ctrl+Q
+System → Scope → Inheritance → Review panels show remaining errors.
+The Inheritance panel has a `? Help` button beside the four yes/no/unknown questions (egress
+proxy, GSA common controls, organization dependency management and SHA pinning). Click or
+keyboard-activate it to expand guidance beside the question; activate Close to collapse it.
+Guidance explains qualifying evidence, who to ask and when unknown is appropriate. Opening
+help does not change saved answers or confirm scope.
+
+Fields autosave even when incomplete, and generation stays disabled until required text
+answers are valid. Ctrl+S saves and Ctrl+Q
 saves/exits. Background generation disables editing and reports the project path or failure.
-This UI creates the review project; optional DOCX/diagram rendering still uses `pipeline.py`.
+This UI creates the text review project; optional DOCX rendering uses `pipeline.py` with Pandoc.
+A fresh text project does not require PlantUML. Existing attached diagrams remain preserved.
 
 The previous `boundary_summary: "default"` input is retained but flagged for clarification.
-The UI does not invent a topology to make generation pass. Owner placeholders must be explicit
-decisions, not inferred facts. The diagram view-semantics limitations tracked separately remain.
+The UI does not ask for topology or invent one to make generation pass. Owner placeholders
+must be explicit decisions, not inferred facts. Legacy topology answers stay in their saved
+file without being validated or overwritten by the text workflow.
 
 ### Dependency-free CLI and agent use
 
@@ -54,25 +63,26 @@ python3 "$KIT/sspp-assembly-framework/tools/wizard.py" generate \
   --output /path/to/sspp-project
 
 python3 "$KIT/sspp-assembly-framework/tools/pipeline.py" /path/to/sspp-project/manifest.json \
-  --output /path/to/export --plantuml-jar /path/to/plantuml-1.2026.2.jar \
-  --pandoc /path/to/pandoc
+  --output /path/to/export --pandoc /path/to/pandoc
 ```
 
 The `ask` command is interactive. Agents can instead read `questions.json`, ask the user in their
 own interface and write `answers.json`. Answers are saved incrementally. Generation is offline;
-required Java/fonts, pinned PlantUML and Pandoc are provisioned separately as documented in the
-diagram guide. Outputs live outside the application checkout; no source code is modified.
+Pandoc is provisioned separately for DOCX. Java/fonts and pinned PlantUML are needed only
+when rendering diagram source modules. Outputs live outside the application checkout; no
+source code is modified.
 
 ## Clarifications that cannot be inferred from repository paths
 
 Once answers and renderer paths are available, `generate` also accepts `--export /path/to/export`,
-`--plantuml-jar` and `--pandoc` to perform generation and verified DOCX rendering in one command.
+and `--pandoc` to perform generation and DOCX rendering in one command. `--plantuml-jar`
+is needed only if diagrams have already been registered in the project.
 If a renderer is unavailable, it reports a blocker rather than claiming the document was exported.
 
 - System mission/name, owner, assessed environment and fixed document date.
 - LATO reference or full ATO baseline, and owner confirmation of the draft selection.
 - Data categories, proposed boundary and external services.
-- Nodes and flows for proposed diagrams, including protocol, authentication and storage.
+- Nodes and relationships are reviewed later in the separate diagramming flow.
 - Later control-specific questions: accountable role, parameter decisions, inherited scope,
   implementation mechanism, evidence and assessment results.
 
@@ -82,7 +92,15 @@ Privacy, overlays and organization-specific tailoring must be assessed by the ow
 catalog library remains available for additional controls. A selected security baseline alone
 does not settle privacy-control applicability.
 
-## Topology input example
+## Separate diagram proposal
+
+An LLM/agent first inspects the permitted repository source and records supposed nodes and
+relationships with source revision/path/line citations, assumptions and uncertainty. The
+separate flow asks about unknown relationships and boundary placements, persists corrections,
+then generates diagram sources. It does not claim the path-only intake performed that review.
+See [diagram review](diagram-review.md) for its contract and commands.
+
+Legacy topology format (retained for compatibility; no longer required for text configuration):
 
 ```json
 {
@@ -98,10 +116,9 @@ does not settle privacy-control applicability.
 }
 ```
 
-Four diagram sources are seeded from this same declared topology, titled context/boundary/
-architecture/data-flow. They are editable projections, not four independently discovered
-architectures. Review scope and level of detail for each. The generated flow table carries the
-declared data/authentication/storage semantics. Rendering checks do not verify them.
+Old generated projects may contain four diagrams seeded from the same topology. Text-only
+regeneration leaves them untouched. New projects receive an explicit diagram-readiness gap
+until separately reviewed diagrams are attached. Rendering checks do not prove architecture.
 
 ## Inherited and shared controls
 
@@ -143,11 +160,9 @@ owner-confirmed inheritance decisions is not implied by this readable report int
 - Bounded, tracked-path repository inventory: manifests, deployments, workflow/test/doc paths.
 - Durable intake questions and incremental interactive answers.
 - Hash-verified offline baseline selection and selected control project generation.
-- Control requirements, example guidance, unanswered status/evidence fields and diagrams.
+- Control requirements, example guidance and unanswered status/evidence fields.
 - Regeneration preserves edited responses/chapters and stable IDs; managed intake text refreshes
-  only when unchanged. Updated topology metadata enters the manifest on regeneration.
-  If any diagram source or its metadata is edited, the entire diagram set is preserved and
-  reported for reconciliation rather than mixing old source with newly answered topology.
+  only when unchanged. The text workflow never rewrites diagram sources from topology answers.
 - Existing pipeline renders SVG/PNG and DOCX and verifies embedded diagram bytes.
 
 ## What still needs an agent or owner

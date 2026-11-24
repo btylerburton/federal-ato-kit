@@ -71,7 +71,8 @@ class WizardTests(unittest.TestCase):
         self.assertEqual(report['total_controls'], 58)
         first = (out / 'scaffold-state.json').read_bytes()
         manifest = load_json(out / 'manifest.json')
-        self.assertEqual(len([m for m in manifest['modules'] if m['kind'] == 'diagram']), 4)
+        self.assertEqual(len([m for m in manifest['modules'] if m['kind'] == 'diagram']), 0)
+        self.assertIn('diagram-readiness', {m['id'] for m in manifest['modules']})
         response = out / 'controls/ac/ac-2.response.md';response.write_text('Team implementation edit.\n')
         chapter = out / 'chapters/boundary.md';chapter.write_text('Owner reviewed boundary.\n')
         wizard.generate(self.repo, self.answers, out)
@@ -134,6 +135,14 @@ class WizardTests(unittest.TestCase):
     def test_edited_diagram_preserves_whole_topology_unit(self):
         out = self.root / 'draft'
         wizard.generate(self.repo, self.answers, out)
+        # Simulate a legacy project with previously authored diagrams. Text generation
+        # must not reinterpret the legacy topology or overwrite any source/metadata.
+        from diagram_starters import starters
+        files, _ = starters()
+        for name, content in files.items():
+            target = out / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
         path = out / 'diagrams/context.puml'
         path.write_text(path.read_text().replace('@enduml', "' Owner annotation\n@enduml"))
         old_metadata = (out / 'diagrams.json').read_bytes()
@@ -143,7 +152,22 @@ class WizardTests(unittest.TestCase):
         wizard.generate(self.repo, self.answers, out)
         self.assertEqual((out / 'diagrams.json').read_bytes(), old_metadata)
         self.assertEqual(path.read_bytes(), old_source)
-        self.assertIn('diagrams.json', load_json(out / 'wizard-report.json')['preserved_user_files'])
+        self.assertTrue((out / 'diagrams.json').exists())
+
+    def test_text_generation_without_topology_composes_and_preserves_legacy_answer(self):
+        from build import compose
+        self.data.pop('topology')
+        self.answers.write_text(json.dumps(self.data))
+        out = self.root / 'text-only'
+        wizard.generate(self.repo, self.answers, out)
+        files = compose(out / 'manifest.json')
+        self.assertIn(b'Diagrams pending separate review', files['document.md'])
+        self.assertFalse((out / 'diagrams.json').exists())
+        self.data['topology'] = {'legacy_unparsed': 'keep this answer'}
+        self.answers.write_text(json.dumps(self.data))
+        before = self.answers.read_bytes()
+        wizard.generate(self.repo, self.answers, out)
+        self.assertEqual(self.answers.read_bytes(), before)
 
     def test_cli_export_refuses_application_destination(self):
         command = [sys.executable, str(Path(wizard.__file__)), 'generate', '--repository', str(self.repo),

@@ -8,6 +8,20 @@ last_updated: "2026-11-24"
 
 # Verification record
 
+## Question help update — November 24
+
+Added adjacent clickable/keyboard-operable help for egress proxy, GSA common-control scope,
+organization dependency-management enrollment and SHA pinning. The inline disclosure includes
+meaning, evidence, responsible contacts and unknown/no guidance; hover also indicates how to
+open it. No dependency change.
+
+All seven Textual interaction tests passed in 15.130 seconds, including opening each disclosure
+by mouse, closing via Enter at 80×24, and byte-comparing saved answers before/after. Existing
+autosave, topology and real-generation tests also passed. The first test revealed Textual's
+button active-animation interval ignored immediate reactivation; help disclosures now disable
+that animation interval, and the same interaction test passes without sleeps. Whitespace check
+passed. This tests the actual UI event behavior, not just the presence of help strings.
+
 OpenCode AI coordinator, delegated UI implementation and independent read-only review.
 User approved the optional Textual UI, local dependency downloads, legacy-answer backup and
 small durable work increments. Application source remained read-only.

@@ -49,10 +49,6 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
                   'boundary_summary': 'One service with an external browser'}
         for key, value in fields.items():
             session.update(key, value)
-        session.add_node({'id': 'browser', 'title': 'Browser', 'boundary': 'outside'})
-        session.add_node({'id': 'service', 'title': 'Service', 'boundary': 'inside'})
-        session.add_flow({'from': 'browser', 'to': 'service', 'data': 'synthetic',
-                          'protocol': 'HTTPS', 'authentication': 'anonymous', 'storage': 'none'})
 
     async def test_defaults_autosave_quit_and_resume_at_80_columns(self):
         session = self.session()
@@ -85,6 +81,7 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
         session = self.session()
         app = WizardApp(session)
         async with app.run_test(size=(100, 40)) as pilot:
+            await pilot.pause()
             app.query_one('#system_name', Input).value = '[red]Example[/red]'
             await pilot.click('#step-scope')
             await pilot.pause()
@@ -106,41 +103,25 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
             self.assertNotIn('boundary_summary', session.issues())
             self.assertNotIn('scope_confirmed', session.issues())
 
-    async def test_topology_forms_validate_persist_and_remove(self):
+    async def test_legacy_topology_survives_text_edits_and_resumes_at_review(self):
         session = self.session()
-        app = WizardApp(session)
+        topology = {'nodes': [{'id': 'service', 'title': 'Service', 'boundary': 'inside'}],
+                    'flows': []}
+        session.update('topology', topology)
+        state = json.loads(session.state_path.read_text())
+        state['step'] = 'topology'
+        session.state_path.write_text(json.dumps(state))
+        app = WizardApp(self.session())
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.click('#step-topology')
+            self.assertEqual(app.query_one('#sections', ContentSwitcher).current, 'review')
+            await pilot.click('#step-system')
             await pilot.pause()
-            await self.click_scrolled(app, pilot, '#add-node')
-            self.assertEqual(session.answers['topology']['nodes'], [])
-            self.assertIn('Topology not saved', str(app.query_one('#status', Static).render()))
-            for node_id, title, boundary in [('browser', 'Browser', 'outside'), ('service', 'Service', 'inside')]:
-                app.query_one('#node-id', Input).value = node_id
-                app.query_one('#node-title', Input).value = title
-                app.query_one('#node-boundary', Select).value = boundary
-                await self.click_scrolled(app, pilot, '#add-node')
-            app.query_one('#flow-from', Select).value = 'browser'
-            app.query_one('#flow-to', Select).value = 'service'
-            await self.click_scrolled(app, pilot, '#add-flow')
-            self.assertEqual(session.answers['topology']['flows'], [])
-            for key, value in {'data': 'synthetic', 'protocol': 'HTTPS', 'authentication': 'anonymous', 'storage': 'none'}.items():
-                app.query_one('#flow-' + key, Input).value = value
-            await self.click_scrolled(app, pilot, '#add-flow')
-            self.assertEqual(len(json.loads(session.answers_path.read_text())['topology']['flows']), 1)
-            self.assertNotIn('topology', session.issues())
-            app.query_one('#remove-flow-choice', Select).value = 0
-            await self.click_scrolled(app, pilot, '#remove-flow')
-            self.assertEqual(session.answers['topology']['flows'], [])
-            app.query_one('#flow-from', Select).value = 'browser'
-            app.query_one('#flow-to', Select).value = 'service'
-            await self.click_scrolled(app, pilot, '#add-flow')
-            app.query_one('#remove-node-choice', Select).value = 'browser'
-            await self.click_scrolled(app, pilot, '#remove-node')
-            topology = json.loads(session.answers_path.read_text())['topology']
-            self.assertEqual([node['id'] for node in topology['nodes']], ['service'])
-            self.assertEqual(topology['flows'], [])
-            self.assertIn('topology', session.issues())
+            app.query_one('#system_owner', Input).value = 'Updated owner'
+            await pilot.pause()
+            await pilot.press('ctrl+s', 'ctrl+q')
+        reopened = self.session()
+        self.assertEqual(reopened.answers['system_owner'], 'Updated owner')
+        self.assertEqual(reopened.answers['topology'], topology)
 
     async def test_inheritance_autosaves_without_scope_approval(self):
         app = WizardApp(self.session())
@@ -154,6 +135,28 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(saved['inheritance']['hosting_service'], 'cloud-gov-pages')
             self.assertEqual(saved['inheritance']['egress_proxy'], 'no')
             self.assertFalse(saved['scope_confirmed'])
+
+    async def test_question_help_click_and_keyboard_preserve_answers(self):
+        session = self.session()
+        app = WizardApp(session)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.click('#step-inheritance')
+            await pilot.pause()
+            before = session.answers_path.read_bytes()
+            for key in ('egress_proxy', 'gsa_common_controls', 'org_dependency_management', 'sha_pinning'):
+                with self.subTest(question=key):
+                    detail = app.query_one('#help-detail-' + key, Static)
+                    self.assertFalse(detail.display)
+                    await self.click_scrolled(app, pilot, '#help-' + key)
+                    self.assertTrue(detail.display)
+                    self.assertEqual(session.answers_path.read_bytes(), before)
+                    # Keyboard activation closes the same focused help button.
+                    await pilot.press('enter')
+                    await pilot.pause()
+                    self.assertFalse(detail.display)
+                    self.assertEqual(session.answers_path.read_bytes(), before)
+            self.assertEqual(app.query_one('#sections', ContentSwitcher).current, 'inheritance')
+            self.assertFalse(session.answers.get('scope_confirmed'))
 
     async def test_background_generation_disables_edits_and_recovers_from_error(self):
         session = self.session()
@@ -190,18 +193,32 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn('Synthetic generation failure', str(app.query_one('#generation-result', Static).render()))
             self.assertFalse(app.query_one('#generate', Button).disabled)
 
-    async def test_generate_real_lato_draft_from_review(self):
+    async def test_text_only_navigation_generates_real_lato_draft_without_topology(self):
         session = self.session()
         self.valid_answers(session)
+        self.assertEqual(session.answers['topology'], {'nodes': [], 'flows': []})
+        self.assertFalse((self.workspace / 'project').exists())
         app = WizardApp(session)
         async with app.run_test(size=(100, 40)) as pilot:
-            await pilot.click('#step-review')
+            self.assertEqual([button.id for button in app.query('#sidebar Button')],
+                             ['step-system', 'step-scope', 'step-inheritance', 'step-review'])
+            self.assertEqual(len(app.query('#topology')), 0)
+            await pilot.click('#step-inheritance')
             await pilot.pause()
+            await pilot.click('#next')
+            await pilot.pause()
+            self.assertEqual(app.query_one('#sections', ContentSwitcher).current, 'review')
+            self.assertFalse(app.query_one('#generate', Button).disabled)
             await self.click_scrolled(app, pilot, '#generate')
             await app.workers.wait_for_complete()
             report = json.loads((self.workspace / 'project' / 'wizard-report.json').read_text())
             self.assertEqual(report['selected_shells'], 58)
-            self.assertTrue((self.workspace / 'project' / 'manifest.json').is_file())
+            manifest = json.loads((self.workspace / 'project' / 'manifest.json').read_text())
+            self.assertTrue(any(module['id'] == 'diagram-readiness' and module['kind'] == 'gap'
+                                for module in manifest['modules']))
+            self.assertFalse(any(module['kind'] == 'diagram' for module in manifest['modules']))
+            self.assertEqual(json.loads(session.answers_path.read_text())['topology'],
+                             {'nodes': [], 'flows': []})
             self.assertIn('Draft generated:', str(app.query_one('#generation-result', Static).render()))
 
 

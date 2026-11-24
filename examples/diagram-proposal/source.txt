@@ -1,0 +1,3 @@
+Synthetic example only: a client sends search requests to an API over HTTPS.
+The API stores records in a database using TLS and a service identity.
+The database deployment location and authorization boundary are not established here.

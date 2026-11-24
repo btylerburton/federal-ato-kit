@@ -48,7 +48,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--plantuml-jar", type=Path, required=True)
+    parser.add_argument("--plantuml-jar", type=Path, help="Required only when manifest includes PlantUML diagram modules")
     parser.add_argument("--pandoc", type=Path, required=True)
     args = parser.parse_args()
     try:

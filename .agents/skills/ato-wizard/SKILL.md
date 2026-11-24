@@ -17,8 +17,11 @@ scope/permissions required there before code inspection, installs, edits or live
 2. Ask unresolved `questions.json` items in a concise batch. Do not infer system categorization,
    LATO eligibility, authority, provider approval or actual deployment from filenames.
 3. Explain the selected baseline and preserve the user's source/environment/revision choices.
-4. Build proposed node/flow inventory from user answers and, when authorized, bounded source
-   review. Cite exact revision/path evidence; label assumptions and unresolved components.
+4. Generate text configuration and controls without waiting for topology. For diagramming,
+   run a separate authorized repository review and write a structured proposal: supposed
+   nodes/relationships, exact revision/path evidence, assumptions and unresolved properties.
+   Use the separate diagram-review flow to ask only the missing/uncertain relationship and
+   boundary questions. Preserve original proposal and human corrections independently of text answers.
 5. Run generation and fill selected response files from real source observations and evidence.
    Use the per-control library's questions and commented examples as guidance. Never uncomment
    an example and present it as an observed implementation without supporting evidence.

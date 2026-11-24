@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "repository_revision": "0000000000000000000000000000000000000000",
+  "system_name": "Synthetic search service",
+  "environment": "Review environment",
+  "date": "2026-11-24",
+  "assumptions": ["The intended review environment follows the documented request path"],
+  "unknown_fields": ["nodes/database/boundary", "flows/search/authentication"],
+  "nodes": [
+    {
+      "id": "client",
+      "title": "Search client",
+      "boundary": "outside",
+      "kind": "actor",
+      "status": "source-supported",
+      "evidence": [{"path": "examples/diagram-proposal/source.txt", "lines": [1, 1]}]
+    },
+    {
+      "id": "api",
+      "title": "Search API",
+      "boundary": "inside",
+      "kind": "component",
+      "status": "source-supported",
+      "evidence": [{"path": "examples/diagram-proposal/source.txt", "lines": [1, 2]}]
+    },
+    {
+      "id": "database",
+      "title": "Record database",
+      "boundary": null,
+      "kind": "database",
+      "status": "hypothesis",
+      "evidence": [{"path": "examples/diagram-proposal/source.txt", "lines": [2, 3]}]
+    }
+  ],
+  "flows": [
+    {
+      "id": "search",
+      "from": "client",
+      "to": "api",
+      "data": "Search requests",
+      "protocol": "HTTPS",
+      "authentication": null,
+      "storage": "None",
+      "status": "source-supported",
+      "evidence": [{"path": "examples/diagram-proposal/source.txt", "lines": [1, 1]}]
+    },
+    {
+      "id": "persist",
+      "from": "api",
+      "to": "database",
+      "data": "Stored records",
+      "protocol": "TLS",
+      "authentication": "Service identity",
+      "storage": "Record database",
+      "status": "source-supported",
+      "evidence": [{"path": "examples/diagram-proposal/source.txt", "lines": [2, 2]}]
+    }
+  ]
+}

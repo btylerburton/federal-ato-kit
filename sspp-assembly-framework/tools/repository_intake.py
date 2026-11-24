@@ -60,5 +60,4 @@ def questions():
         {'id': 'date', 'question': 'What fixed document date should this draft use (YYYY-MM-DD)?'},
         {'id': 'data_categories', 'question': 'What data is processed, including PII, authenticator and agency records?', 'type': 'string-list'},
         {'id': 'boundary_summary', 'question': 'What components and external services are inside/outside the proposed boundary?'},
-        {'id': 'topology', 'question': 'Supply nodes (id/title/boundary) and flows (from/to/data/protocol/authentication/storage) for proposed diagrams.', 'type': 'object'},
     ] + [dict(q, section='inheritance') for q in QUESTIONS]

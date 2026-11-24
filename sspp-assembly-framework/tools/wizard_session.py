@@ -10,7 +10,7 @@ from build import json_bytes, load_json, sha
 from inheritance import answers_for, defaults
 from repository_intake import checkout_root, inspect, questions
 
-SECTIONS = ('system', 'scope', 'inheritance', 'topology', 'review')
+SECTIONS = ('system', 'scope', 'inheritance', 'review')
 SYSTEM = {'system_name', 'system_owner', 'environment', 'date'}
 SCOPE = {'mode', 'baseline', 'data_categories', 'boundary_summary', 'scope_confirmed'}
 PLACEHOLDERS = {'default', 'unknown', 'tbd', 'unfilled', 'n/a'}
@@ -99,7 +99,7 @@ def topology_issue(topology, require_complete=True):
     return None
 
 
-def answer_issues(answers, include_topology=True):
+def answer_issues(answers, include_topology=False):
     result = {}
     for key in sorted(SYSTEM | SCOPE):
         error = field_issue(key, answers.get(key), answers)
@@ -180,10 +180,10 @@ class WizardSession:
         self.answers = normalize(self.answers, today, self.repository.name)
         if not isinstance(self.answers.get('inheritance'), dict):
             raise ValueError('Saved inheritance answers must be an object; original file preserved')
-        # Malformed topologies are surfaced before UI access, never silently discarded.
-        structural = topology_issue(self.answers.get('topology'), require_complete=False)
-        if structural:
-            raise ValueError(f'Saved topology requires repair: {structural}')
+        # Legacy topology is preserved verbatim but belongs to the separate diagram flow.
+        if self.current_step == 'topology':
+            self.current_step = 'review'
+            self.notices.append('Diagramming is now separate; saved topology is preserved. Continue text review here.')
         if self._answer_hash and (before != self.answers or not self.state_path.exists()):
             backup = intake / ('answers.backup-' + self._answer_hash[:16] + '.json')
             original = self.answers_path.read_bytes()

@@ -13,9 +13,54 @@ from inheritance import QUESTIONS
 from wizard_session import WizardSession
 
 
-SECTIONS = ('system', 'scope', 'inheritance', 'topology', 'review')
+SECTIONS = ('system', 'scope', 'inheritance', 'review')
 SYSTEM_FIELDS = ('system_name', 'system_owner', 'environment', 'date')
-FLOW_FIELDS = ('from', 'to', 'data', 'protocol', 'authentication', 'storage')
+INHERITANCE_HELP = {
+    'egress_proxy': (
+        'Egress proxy\n\n'
+        'A proxy controls outbound connections from an application. Choose yes only if '
+        'cg-egress-proxy is deployed for this system and the required direct-egress restrictions apply.\n\n'
+        'Look for: deployment/binding configuration, production-space application security groups '
+        '(ASGs), allowed destinations, and a test that direct outbound access is restricted. '
+        'Hosting on cloud.gov or having proxy code in a repository is not enough.\n\n'
+        'Ask your hosting/platform administrator. Choose unknown if you cannot confirm the '
+        'deployment or restrictions; no if the system does not use this proxy.'),
+    'gsa_common_controls': (
+        'GSA common-control scope\n\n'
+        'A common-control provider performs defined responsibilities for covered systems. '
+        'Choose yes when the system owner or ISSO confirms that this system is covered by '
+        'the applicable GSA common-control catalog.\n\n'
+        'Look for: the current catalog, applicability language, specific control/part mappings, '
+        'remaining customer responsibilities, and required agreements or configurations. '
+        'A GSA repository or cloud.gov hosting alone does not establish coverage.\n\n'
+        'Ask your ISSO/system owner which providers and responsibility matrices apply. '
+        'Choose unknown while scope is unconfirmed; no when confirmed outside that scope. '
+        'Yes declares applicability, not that every system control is implemented.'),
+    'org_dependency_management': (
+        'Organization dependency-management enrollment\n\n'
+        'This asks about enrollment in the specific shared service described by the reference '
+        'component, not simply whether the repository uses dependency tools.\n\n'
+        'Look for: a merged Renovate onboarding PR, the prescribed organization preset, '
+        'confirmation that the organization app includes this repository, workflow scanning, '
+        'and vulnerability-remediation tracking. A renovate.json, Dependabot alert, lockfile '
+        'or single pinned action does not by itself prove enrollment.\n\n'
+        'Ask the GitHub organization/platform administrator. Choose unknown until enrollment '
+        'is confirmed; no if the repository is not enrolled. Individual practices can still '
+        'support system-specific controls.'),
+    'sha_pinning': (
+        'SHA pinning\n\n'
+        'A full commit SHA identifies immutable GitHub Action code; a version tag can move. '
+        'Choose yes only after checking applicable external action and reusable-workflow '
+        'references and the review process for updates.\n\n'
+        'Moving reference: uses: actions/checkout@v4\n'
+        'Pinned syntax: uses: actions/checkout@<VERIFIED_40_CHARACTER_COMMIT_SHA> # reviewed release\n'
+        'The placeholder above is not a usable commit. Verify the real SHA against the upstream release.\n\n'
+        'Look for: workflow files, reviewed update PRs, upstream release/commit verification '
+        'and enforcement or scan results. A lockfile is not action SHA pinning. Choose unknown '
+        'if not checked; no if applicable references still use moving tags. If there are no '
+        'applicable actions, keep applicability unresolved rather than claiming evidence. '
+        'This is a practice, not automatic GSA common-control inheritance.'),
+}
 
 
 class WizardApp(App):
@@ -35,11 +80,14 @@ class WizardApp(App):
     Input, Select { width: 100%; }
     .error { color: $error; height: auto; }
     .hint { color: $text-muted; height: auto; }
-    .inventory { height: auto; border: solid $primary; padding: 1; }
     #status { height: auto; max-height: 4; padding: 0 1; }
     #navigation { height: 3; }
     #navigation Button { width: 1fr; min-width: 8; }
     #review-summary { height: auto; }
+    .question-row { height: auto; margin-top: 1; }
+    .question-row Label { width: 1fr; margin-top: 0; }
+    .question-help { width: 8; min-width: 8; margin-left: 1; }
+    .help-detail { height: auto; padding: 1; margin-bottom: 1; border-left: thick $primary; }
     """
 
     def __init__(self, session: WizardSession):
@@ -88,15 +136,26 @@ class WizardApp(App):
                                  classes='hint', markup=False)
                     for question in QUESTIONS:
                         key = question['id']
-                        yield Label(question['question'], markup=False)
+                        with Horizontal(classes='question-row'):
+                            yield Label(question['question'], markup=False)
+                            if key in INHERITANCE_HELP:
+                                button = Button('? Help', id='help-' + key, classes='question-help')
+                                # Disclosure toggles should accept an immediate second activation.
+                                button.active_effect_duration = 0
+                                button.tooltip = 'Explain this question and what evidence to check. Click or press Enter.'
+                                yield button
+                        if key in INHERITANCE_HELP:
+                            detail = Static(INHERITANCE_HELP[key], id='help-detail-' + key,
+                                            classes='help-detail', markup=False)
+                            detail.display = False
+                            yield detail
                         yield from self.choice('inheritance-' + key, question['choices'],
                                                self.session.answers.get('inheritance', {}).get(key, 'unknown'))
-                with VerticalScroll(id='topology', classes='panel'):
-                    yield from self.topology_form()
                 with VerticalScroll(id='review', classes='panel'):
                     yield Static('Review before generating a draft', markup=False)
                     yield Static('', id='review-summary', markup=False)
-                    yield Static('Generated controls and diagrams remain drafts requiring owner review and evidence.',
+                    yield Static('Generated text remains a draft requiring owner review and evidence. '
+                                 'Diagrams are a separate step to complete later.',
                                  classes='hint', markup=False)
                     yield Button('Generate draft', id='generate', variant='primary')
                     yield Static('', id='generation-result', markup=False)
@@ -107,33 +166,7 @@ class WizardApp(App):
             yield Button('Save & exit', id='save-exit')
         yield Footer()
 
-    def topology_form(self):
-        yield Static('Proposed components and directed data flows', markup=False)
-        yield Static('', id='error-topology', classes='error', markup=False)
-        yield Static('', id='nodes-list', classes='inventory', markup=False)
-        for key in ('id', 'title'):
-            yield Label('Node ' + key, markup=False)
-            yield Input(id='node-' + key)
-        yield Label('Boundary placement', markup=False)
-        yield Select([('Inside', 'inside'), ('Outside', 'outside')], id='node-boundary')
-        yield Button('Add node', id='add-node')
-        yield Label('Remove node (also removes connected flows)', markup=False)
-        yield Select([], id='remove-node-choice')
-        yield Button('Remove node', id='remove-node', variant='warning')
-        yield Static('', id='flows-list', classes='inventory', markup=False)
-        for key in FLOW_FIELDS:
-            yield Label('Flow ' + key, markup=False)
-            if key in ('from', 'to'):
-                yield Select([], id='flow-' + key)
-            else:
-                yield Input(id='flow-' + key)
-        yield Button('Add flow', id='add-flow')
-        yield Label('Remove flow', markup=False)
-        yield Select([], id='remove-flow-choice')
-        yield Button('Remove flow', id='remove-flow', variant='warning')
-
     def on_mount(self):
-        self.refresh_topology()
         self.refresh_validation()
         self.set_status('\n'.join(self.session.notices) or 'Edits save automatically. Ctrl+S saves; Ctrl+Q saves and exits.')
         self.call_after_refresh(self.enable_autosave)
@@ -161,8 +194,6 @@ class WizardApp(App):
             key = question['id']
             value = self.session.answers.get('inheritance', {}).get(key, 'unknown')
             summary.append(f'{key.replace("_", " ").title()}: {value}')
-        topology = self.session.answers.get('topology', {})
-        summary += ['', f'Topology: {len(topology.get("nodes", []))} nodes, {len(topology.get("flows", []))} flows.']
         summary += ['', 'Resolve before generation:' if issues else 'Required answers complete. Ready to generate.']
         summary += [f'• {key}: {error}' for key, error in issues.items()]
         self.query_one('#review-summary', Static).update('\n'.join(summary))
@@ -214,56 +245,20 @@ class WizardApp(App):
         self.query_one('#sections', ContentSwitcher).current = step
         self.refresh_validation()
 
-    def refresh_topology(self):
-        topology = self.session.answers.get('topology', {})
-        nodes, flows = topology.get('nodes', []), topology.get('flows', [])
-        self.query_one('#nodes-list', Static).update('\n'.join(
-            f'{node["id"]}: {node["title"]} ({node["boundary"]})' for node in nodes) or 'No nodes yet.')
-        self.query_one('#flows-list', Static).update('\n'.join(
-            f'{i + 1}. {flow["from"]} → {flow["to"]}: {flow["data"]}; {flow["protocol"]}; '
-            f'auth: {flow["authentication"]}; storage: {flow["storage"]}'
-            for i, flow in enumerate(flows)) or 'No flows yet.')
-        options = [(Text(f'{node["id"]}: {node["title"]}'), node['id']) for node in nodes]
-        for key in ('remove-node-choice', 'flow-from', 'flow-to'):
-            self.query_one('#' + key, Select).set_options(options)
-        self.query_one('#remove-flow-choice', Select).set_options([
-            (Text(f'{i + 1}. {flow["from"]} → {flow["to"]}'), i) for i, flow in enumerate(flows)])
-
-    def form_value(self, key):
-        widget = self.query_one('#' + key)
-        return '' if widget.value is Select.NULL else widget.value
-
-    def edit_topology(self, action):
-        try:
-            if action == 'add-node':
-                self.session.add_node({key: self.form_value('node-' + key) for key in ('id', 'title', 'boundary')})
-            elif action == 'add-flow':
-                self.session.add_flow({key: self.form_value('flow-' + key) for key in FLOW_FIELDS})
-            elif action == 'remove-node':
-                self.session.remove_node(self.form_value('remove-node-choice'))
-            else:
-                index = self.form_value('remove-flow-choice')
-                if index == '':
-                    raise ValueError('Choose a flow to remove')
-                self.session.remove_flow(index)
-            self.refresh_topology()
-            self.set_status('Topology saved.')
-        except Exception as error:
-            self.set_status(f'Topology not saved: {error}')
-        self.refresh_validation()
-
     def on_button_pressed(self, event: Button.Pressed):
         action = event.button.id
         if self.generating:
             return
-        if action.startswith('step-'):
+        if action.startswith('help-'):
+            detail = self.query_one('#help-detail-' + action.removeprefix('help-'), Static)
+            detail.display = not detail.display
+            event.button.label = 'Close' if detail.display else '? Help'
+        elif action.startswith('step-'):
             self.change_step(action.removeprefix('step-'))
         elif action in ('back', 'next'):
             offset = -1 if action == 'back' else 1
             index = max(0, min(len(SECTIONS) - 1, SECTIONS.index(self.step) + offset))
             self.change_step(SECTIONS[index])
-        elif action in ('add-node', 'add-flow', 'remove-node', 'remove-flow'):
-            self.edit_topology(action)
         elif action == 'save-exit':
             self.action_save_exit()
         elif action == 'generate':
