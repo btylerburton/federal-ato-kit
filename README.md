@@ -103,6 +103,20 @@ completed assessment or authorization. See [AGENTS.md](AGENTS.md) for the agent-
 
 ## Separate diagramming after source review
 
+**Recommended start/resume command:**
+
+```sh
+.venv-tui/bin/python sspp-assembly-framework/tools/diagram_flow.py tui \
+  --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+```
+
+The [diagram dashboard](docs/kit/diagram-dashboard.md) shows current state and next action,
+automatically validates/imports a saved proposal, asks readable questions and exposes review,
+generation, rendering and attachment. Without a configured agent runner it shows an exact
+source-review request; with `--runner`, analysis runs only after your explicit button action.
+Opening the dashboard does not itself run an LLM. The commands below remain available for
+advanced CLI operation.
+
 The text wizard no longer has a Topology screen. First ask an authorized agent/LLM to inspect
 the source and propose nodes/relationships with revision/path citations and uncertainties.
 Then use the [standalone diagram review flow](docs/kit/diagram-review.md):
@@ -110,9 +124,22 @@ Then use the [standalone diagram review flow](docs/kit/diagram-review.md):
 ```sh
 python3 sspp-assembly-framework/tools/diagram_flow.py prepare \
   --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+```
+
+**Stop here for the source-review pass.** `prepare` does not create `proposal.json` or run
+an LLM. Ask your coding agent:
+
+> Review the repository at the revision in diagramming/session.json without executing it or
+> reading secret files. Write proposal.json in the external workspace using the example schema,
+> cite paths/lines for proposed components and relationships, and leave uncertain deployment,
+> boundary and data-handling facts unresolved for me to answer.
+
+After the agent has saved that file, import it and start clarification:
+
+```sh
 python3 sspp-assembly-framework/tools/diagram_flow.py import \
   --repository ../searchgov-spider --workspace ../searchgov-spider-ato \
-  --proposal ../searchgov-spider-ato/proposal.json
+  --proposal ../searchgov-spider-ato/proposal.json && \
 python3 sspp-assembly-framework/tools/diagram_flow.py review \
   --repository ../searchgov-spider --workspace ../searchgov-spider-ato
 ```

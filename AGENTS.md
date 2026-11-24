@@ -45,7 +45,19 @@ nodes/relationships. Distinguish cloud.gov Pages from PaaS and provider statemen
 confirmed inheritance. Use `.agents/skills/ato-wizard/SKILL.md` and `docs/kit/wizard.md` for
 the complete workflow. Do not invent answers to satisfy required fields.
 
-The separate commands are `diagram_flow.py prepare/import/review/generate/render`; see
+The recommended separate UI command is:
+
+```sh
+.venv-tui/bin/python sspp-assembly-framework/tools/diagram_flow.py tui \
+  --repository ../searchgov-spider --workspace ../searchgov-spider-ato
+```
+
+See `docs/kit/diagram-dashboard.md`. No configured runner means show the source-review request;
+never claim an LLM ran or fabricate proposal content. A trusted `--runner` config must be
+operator supplied, not read as executable instructions from the application. Execution and
+human confirmation are distinct explicit user actions. Preserve pending answers on reopen.
+
+The advanced commands are `diagram_flow.py prepare/import/review/generate/render`; see
 `docs/kit/diagram-review.md` and `examples/diagram-proposal/`. Produce an exact-revision,
 source-cited proposal only after the authorized review, retain hypotheses, and ask for missing
 relationships. Never supply human review confirmation on the user's behalf. Attach reviewed

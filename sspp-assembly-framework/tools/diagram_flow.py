@@ -212,6 +212,10 @@ def pending(proposal, answers):
 
 def import_proposal(repository, workspace, path):
     repository, root, state = read_session(repository, workspace)
+    if not path.is_file():
+        raise ValueError('Proposal file not found: ' + str(path) + '. prepare only creates the workspace. '
+                         'Ask an authorized agent to review the pinned source and write proposal.json first; '
+                         'see docs/kit/diagram-review.md and examples/diagram-proposal/proposal.json.')
     if path.stat().st_size > 1024 * 1024:
         raise ValueError('Proposal exceeds 1 MiB')
     content = path.read_bytes()
@@ -417,7 +421,7 @@ def render(repository, workspace, jar, pandoc=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
-    for command in ('prepare', 'start', 'import', 'review', 'generate', 'render'):
+    for command in ('prepare', 'start', 'import', 'review', 'generate', 'render', 'tui'):
         child = sub.add_parser(command)
         child.add_argument('--repository', type=Path, required=True)
         child.add_argument('--workspace', type=Path, required=True)
@@ -427,13 +431,25 @@ def main():
             child.add_argument('--answers', type=Path, help='JSON field-key to human-answer map; noninteractive')
             child.add_argument('--confirm', action='store_true', help='Explicitly attest human review of the resolved proposal')
             child.add_argument('--reviewer', help='Human reviewer name; required with --confirm')
-        if command == 'render':
-            child.add_argument('--plantuml-jar', type=Path, required=True)
+        if command in {'render', 'tui'}:
+            child.add_argument('--plantuml-jar', type=Path, required=command == 'render')
             child.add_argument('--pandoc', type=Path, help='Also generate DOCX with the existing pipeline')
+        if command == 'tui':
+            child.add_argument('--runner', type=Path, help='Trusted operator-owned agent argv configuration; never run automatically')
     args = parser.parse_args()
     try:
-        if args.command in {'prepare', 'start'}:
+        if args.command == 'tui':
+            try:
+                from diagram_tui import launch
+            except ModuleNotFoundError as error:
+                if error.name not in {'textual', 'rich'}:
+                    raise
+                raise ValueError('Install the optional UI with bash setup-tui.sh and use .venv-tui/bin/python.') from error
+            launch(args.repository, args.workspace, args.runner, args.plantuml_jar, args.pandoc)
+        elif args.command in {'prepare', 'start'}:
             print('AI-assisted diagram workspace ready:', prepare(args.repository, args.workspace))
+            print('NEXT: an authorized source-review agent must write proposal.json before import. '
+                  'prepare does not run an LLM or extract topology; see docs/kit/diagram-review.md.')
         elif args.command == 'import':
             state = import_proposal(args.repository, args.workspace, args.proposal)
             print('PROPOSAL_IMPORTED; pending:', ', '.join(state['pending']) or 'human confirmation')

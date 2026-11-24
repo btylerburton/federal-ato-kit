@@ -124,6 +124,15 @@ class DiagramFlowTests(unittest.TestCase):
         self.assertFalse((self.workspace / 'intake').exists())
         self.assertEqual((self.workspace / 'diagramming/proposal.json').read_bytes(), self.proposal_path.read_bytes())
 
+    def test_missing_proposal_explains_agent_step_and_preserves_session(self):
+        prepared = self.cli('prepare')
+        self.assertIn('must write proposal.json', prepared.stdout)
+        before = self.state()
+        refused = self.cli('import', '--proposal', self.root / 'missing.json', success=False)
+        self.assertIn('prepare only creates the workspace', refused.stderr)
+        self.assertEqual(self.state(), before)
+        self.assertFalse((self.workspace / 'diagramming/proposal.json').exists())
+
     def test_revision_and_citations_rejected_before_import(self):
         self.cli('prepare')
         original = copy.deepcopy(self.proposal)
