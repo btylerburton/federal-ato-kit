@@ -67,9 +67,13 @@ Required proposal structure:
   such as `"nodes/api/boundary"` or `"flows/request/authentication"`.
 - `assumptions`: plain-language strings; every assumption requires a human disposition.
 
-IDs use lowercase letters, digits and underscores, beginning with a letter. Display labels
-use a deliberately small ASCII subset (letters, digits, spaces and `._()/,:+@-`, at most 160
+IDs use lowercase letters, digits, underscores and hyphens, beginning with a letter (maximum
+60 characters). Hyphenated proposal IDs get collision-safe renderer aliases; review IDs are retained.
+Display labels use a deliberately small ASCII subset (letters, digits, spaces and `._()/,:;+@-`, at most 160
 characters); PlantUML directives, multiline content, quotes and markup are not accepted.
+Assumptions are review prose (up to 4000 characters each), never interpolated into diagram source.
+The [shared source-review flow](source-review.md) can propose topology alongside text findings.
+Overview includes **Copy prompt**; **F4** opens copyable field/screen text.
 
 Import checks citations against regular tracked blobs at the exact commit with `git ls-tree`
 and `git cat-file`. It rejects traversal, symlinks/submodules, excluded secret/environment

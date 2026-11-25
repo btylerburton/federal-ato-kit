@@ -8,6 +8,30 @@ last_updated: "2026-11-24"
 
 # Verification record
 
+## All-field help and wrapped text — November 24
+
+OpenCode AI agent, scoped continuation requested by the user. Verification observed at
+2026-11-24T23:28:15Z using Python 3.14.4 and the existing Textual 8.2.8 hash lock.
+
+Every text-wizard field has mouse/keyboard help, including environment and hosting.
+Free-form editors wrap and accept line breaks; data categories split on commas/newlines.
+Saved multiline names remain intact while document-title whitespace is flattened.
+
+- Initial local `bash setup-tui.sh`: failed because the existing environment had broken
+  interpreter links. Prepared `/tmp/opencode/wizard-field-help-env` with `uv venv` and
+  `uv pip sync --require-hashes --only-binary :all:` using the unchanged TUI lockfile.
+- Expanded regression caught a document-title single-line constraint during real generation;
+  fixed both scaffold calls to use the flattened title. The saved answer remains multiline.
+- `TMPDIR=/tmp/opencode PYTHONDONTWRITEBYTECODE=1 /tmp/opencode/wizard-field-help-env/bin/python check.py`:
+  PASS, 12 toolkit tests; 133 framework tests run, 129 passed and four optional renderer/Trestle
+  tests skipped. All eight wizard UI tests ran. Output: `/tmp/opencode/wizard-field-help-check.log`.
+- UI coverage includes all 14 help disclosures at 80×24 without answer changes, vertical
+  wrapping without horizontal scrolling, Enter/Tab, autosave/reopen, real generation with
+  multiline identity/environment/boundary, category parsing and generation-time edit blocking.
+- `git diff --check`, Python syntax parsing, and wizard-guide local-link checks: PASS.
+- Third-party security scans and live renderer/Trestle checks were not run for this UI change.
+  No dependencies were changed. Human Ghostty interaction was not exercised in this Linux session.
+
 ## Question help update — November 24
 
 Added adjacent clickable/keyboard-operable help for egress proxy, GSA common-control scope,

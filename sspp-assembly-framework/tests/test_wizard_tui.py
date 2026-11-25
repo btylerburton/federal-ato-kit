@@ -14,7 +14,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 HAS_TEXTUAL = importlib.util.find_spec('textual') is not None
 if HAS_TEXTUAL:
-    from textual.widgets import Button, Checkbox, ContentSwitcher, Input, Select, Static
+    from textual.widgets import Button, Checkbox, ContentSwitcher, Input, Select, Static, TextArea
     from wizard_session import WizardSession
     from wizard_tui import WizardApp
 
@@ -58,7 +58,7 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
         app = WizardApp(session)
         async with app.run_test(size=(80, 24)) as pilot:
             self.assertEqual(app.query_one('#date', Input).value, date.today().isoformat())
-            self.assertEqual(app.query_one('#system_name', Input).value, self.repo.name)
+            self.assertEqual(app.query_one('#system_name', TextArea).text, self.repo.name)
             self.assertEqual(app.query_one('#mode', Select).value, 'lato')
             self.assertFalse(app.query_one('#scope_confirmed', Checkbox).value)
             self.assertIs(app.query_one('#baseline', Select).value, Select.NULL)
@@ -74,7 +74,7 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
         reopened = self.session()
         self.assertEqual(reopened.current_step, 'scope')
         async with WizardApp(reopened).run_test(size=(80, 24)) as pilot:
-            self.assertEqual(pilot.app.query_one('#system_owner', Input).value, 'Example owner')
+            self.assertEqual(pilot.app.query_one('#system_owner', TextArea).text, 'Example owner')
             self.assertEqual(pilot.app.query_one('#sections', ContentSwitcher).current, 'scope')
 
     async def test_scope_validation_and_literal_user_text(self):
@@ -82,12 +82,12 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
         app = WizardApp(session)
         async with app.run_test(size=(100, 40)) as pilot:
             await pilot.pause()
-            app.query_one('#system_name', Input).value = '[red]Example[/red]'
+            app.query_one('#system_name', TextArea).load_text('[red]Example[/red]')
             await pilot.click('#step-scope')
             await pilot.pause()
             app.query_one('#mode', Select).value = 'ato'
-            app.query_one('#boundary_summary', Input).value = 'unknown'
-            app.query_one('#data_categories', Input).value = 'public, synthetic'
+            app.query_one('#boundary_summary', TextArea).load_text('unknown')
+            app.query_one('#data_categories', TextArea).load_text('public, synthetic')
             await pilot.pause()
             self.assertIn('baseline', session.issues())
             self.assertIn('boundary_summary', session.issues())
@@ -96,7 +96,7 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(app.query_one('#generate', Button).disabled)
             self.assertIn('[red]Example[/red]', str(app.query_one('#review-summary', Static).render()))
             app.query_one('#baseline', Select).value = 'low'
-            app.query_one('#boundary_summary', Input).value = 'A service and its external clients'
+            app.query_one('#boundary_summary', TextArea).load_text('A service and its external clients')
             app.query_one('#scope_confirmed', Checkbox).value = True
             await pilot.pause()
             self.assertNotIn('baseline', session.issues())
@@ -116,7 +116,7 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(app.query_one('#sections', ContentSwitcher).current, 'review')
             await pilot.click('#step-system')
             await pilot.pause()
-            app.query_one('#system_owner', Input).value = 'Updated owner'
+            app.query_one('#system_owner', TextArea).load_text('Updated owner')
             await pilot.pause()
             await pilot.press('ctrl+s', 'ctrl+q')
         reopened = self.session()
@@ -140,21 +140,27 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
         session = self.session()
         app = WizardApp(session)
         async with app.run_test(size=(80, 24)) as pilot:
-            await pilot.click('#step-inheritance')
-            await pilot.pause()
             before = session.answers_path.read_bytes()
-            for key in ('egress_proxy', 'gsa_common_controls', 'org_dependency_management', 'sha_pinning'):
-                with self.subTest(question=key):
-                    detail = app.query_one('#help-detail-' + key, Static)
-                    self.assertFalse(detail.display)
-                    await self.click_scrolled(app, pilot, '#help-' + key)
-                    self.assertTrue(detail.display)
-                    self.assertEqual(session.answers_path.read_bytes(), before)
-                    # Keyboard activation closes the same focused help button.
-                    await pilot.press('enter')
-                    await pilot.pause()
-                    self.assertFalse(detail.display)
-                    self.assertEqual(session.answers_path.read_bytes(), before)
+            sections = {
+                'system': ('system_name', 'system_owner', 'environment', 'date'),
+                'scope': ('mode', 'baseline', 'data_categories', 'boundary_summary', 'scope_confirmed'),
+                'inheritance': ('hosting_service', 'egress_proxy', 'gsa_common_controls',
+                                'org_dependency_management', 'sha_pinning'),
+            }
+            for section, keys in sections.items():
+                await pilot.click('#step-' + section)
+                await pilot.pause()
+                for key in keys:
+                    with self.subTest(question=key):
+                        detail = app.query_one('#help-detail-' + key, Static)
+                        self.assertFalse(detail.display)
+                        await self.click_scrolled(app, pilot, '#help-' + key)
+                        self.assertTrue(detail.display)
+                        self.assertEqual(session.answers_path.read_bytes(), before)
+                        await pilot.press('enter')
+                        await pilot.pause()
+                        self.assertFalse(detail.display)
+                        self.assertEqual(session.answers_path.read_bytes(), before)
             self.assertEqual(app.query_one('#sections', ContentSwitcher).current, 'inheritance')
             self.assertFalse(session.answers.get('scope_confirmed'))
 
@@ -178,20 +184,64 @@ class WizardTuiTests(unittest.IsolatedAsyncioTestCase):
                     await self.click_scrolled(app, pilot, '#generate')
                     self.assertTrue(await asyncio.to_thread(started.wait, 3))
                     self.assertTrue(app.generating)
-                    self.assertTrue(app.query_one('#system_owner', Input).disabled)
+                    self.assertTrue(app.query_one('#system_owner', TextArea).disabled)
                     await pilot.press('ctrl+q')
                     self.assertTrue(app.is_running)
                 finally:
                     release.set()
                 await app.workers.wait_for_complete()
             self.assertFalse(app.generating)
-            self.assertFalse(app.query_one('#system_owner', Input).disabled)
+            self.assertFalse(app.query_one('#system_owner', TextArea).disabled)
             self.assertIn(str(self.workspace / 'project'), str(app.query_one('#generation-result', Static).render()))
             with patch.object(session, 'generate', side_effect=ValueError('Synthetic generation failure')):
                 await self.click_scrolled(app, pilot, '#generate')
                 await app.workers.wait_for_complete()
             self.assertIn('Synthetic generation failure', str(app.query_one('#generation-result', Static).render()))
             self.assertFalse(app.query_one('#generate', Button).disabled)
+
+    async def test_wrapped_multiline_answers_save_and_resume_without_inserted_wraps(self):
+        session = self.session()
+        self.valid_answers(session)
+        session.update('system_name', 'Example crawler\nPublic search')
+        session.update('system_owner', 'Platform team\nSystem owner')
+        session.update('environment', 'Production\nRelease 0.0.1')
+        boundary = 'Includes scheduler and crawler workers with system-owned storage. ' * 5
+        app = WizardApp(session)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.click('#step-scope')
+            await pilot.pause()
+            editor = app.query_one('#boundary_summary', TextArea)
+            editor.load_text(boundary)
+            app.query_one('#data_categories', TextArea).load_text('Public pages\nURLs, operational logs')
+            await pilot.pause()
+            await self.click_scrolled(app, pilot, '#boundary_summary')
+            self.assertGreater(editor.virtual_size.height, 1)
+            self.assertEqual(editor.max_scroll_x, 0)
+            editor.move_cursor(editor.document.end)
+            await pilot.press('enter', *'External: target websites.')
+            await pilot.pause()
+            expected = boundary + '\nExternal: target websites.'
+            self.assertEqual(session.answers['boundary_summary'], expected)
+            self.assertEqual(session.issues(), {})
+            self.assertEqual(session.answers['data_categories'], ['Public pages', 'URLs', 'operational logs'])
+            await pilot.press('tab')
+            self.assertIsNot(app.focused, editor)
+            await pilot.press('ctrl+s', 'ctrl+q')
+        reopened = self.session()
+        self.assertEqual(reopened.answers['boundary_summary'], expected)
+        async with WizardApp(reopened).run_test(size=(80, 24)) as pilot:
+            self.assertEqual(pilot.app.query_one('#boundary_summary', TextArea).text, expected)
+            self.assertEqual(reopened.answers['data_categories'], ['Public pages', 'URLs', 'operational logs'])
+            await pilot.click('#step-review')
+            await pilot.pause()
+            await self.click_scrolled(pilot.app, pilot, '#generate')
+            await pilot.app.workers.wait_for_complete()
+            self.assertIn('Draft generated:', str(pilot.app.query_one('#generation-result', Static).render()))
+            notes = (self.workspace / 'project' / 'chapters' / 'boundary.md').read_text()
+            self.assertIn(expected, notes)
+            self.assertIn('Example crawler\nPublic search', notes)
+            manifest = json.loads((self.workspace / 'project' / 'manifest.json').read_text())
+            self.assertEqual(manifest['document']['title'], 'Example crawler Public search')
 
     async def test_text_only_navigation_generates_real_lato_draft_without_topology(self):
         session = self.session()

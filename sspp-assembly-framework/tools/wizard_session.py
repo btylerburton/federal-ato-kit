@@ -35,8 +35,8 @@ def normalize(answers, today=None, suggested_name=None):
 
 def field_issue(field, value, answers):
     if field in SYSTEM | {'boundary_summary'}:
-        if not isinstance(value, str) or not value.strip() or '\n' in value or '\r' in value:
-            return 'Enter a nonempty single-line value.'
+        if not isinstance(value, str) or not value.strip():
+            return 'Enter a nonempty value.'
     if field == 'date':
         try:
             if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):

@@ -21,7 +21,8 @@ def suites(root=ROOT):
 def main(selected=None):
     codes = []
     with tempfile.TemporaryDirectory(prefix="portable-ato-kit-") as temporary:
-        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "TMPDIR": temporary}
+        # macOS temp roots can contain system symlinks; pass physical paths to fixtures.
+        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "TMPDIR": str(Path(temporary).resolve())}
         for name, command, cwd in (selected if selected is not None else suites()):
             print("== " + name, flush=True)
             code = subprocess.run(command, cwd=cwd, env=env, check=False).returncode

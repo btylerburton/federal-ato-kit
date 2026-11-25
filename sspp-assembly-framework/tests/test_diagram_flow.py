@@ -89,6 +89,35 @@ class DiagramFlowTests(unittest.TestCase):
         self.cli('review', '--answers', answers, '--confirm', '--reviewer', 'Synthetic reviewer')
         self.cli('generate')
 
+    def test_hyphenated_ids_render_without_alias_collision(self):
+        self.proposal['nodes'][0]['id'] = 'crawl-api'
+        self.proposal['nodes'][1]['id'] = 'crawl_api'
+        self.proposal['flows'][0].update(id='fetch-pages', **{'from': 'crawl-api', 'to': 'crawl_api',
+                                                          'data': 'Page text; metadata'})
+        self.proposal['flows'][1]['from'] = 'crawl_api'
+        self.proposal['unknown_fields'] = ['flows/fetch-pages/authentication']
+        self.write_proposal()
+        self.start_import()
+        answers = self.root / 'answers.json'
+        answers.write_text(json.dumps({'nodes/db/boundary': 'inside',
+                                      'nodes/db/review': 'confirmed',
+                                      'flows/fetch-pages/authentication': 'Anonymous'}))
+        self.cli('review', '--answers', answers, '--confirm', '--reviewer', 'Test human')
+        self.cli('generate')
+        manifest = json.loads((self.workspace / 'diagramming/project/manifest.json').read_text())
+        architecture = next(m for m in manifest['modules'] if m.get('view') == 'architecture')
+        self.assertEqual(len({n['id'] for n in architecture['nodes']}), 3)
+        self.assertEqual({n['proposal_id'] for n in architecture['nodes']}, {'crawl-api', 'crawl_api', 'db'})
+        diagrams.check_source((self.workspace / 'diagramming/project' / architecture['path']).read_bytes(), architecture)
+
+    def test_invalid_id_error_points_to_the_field(self):
+        self.proposal['nodes'][0]['id'] = 'bad id'
+        self.write_proposal()
+        self.cli('prepare')
+        result = self.cli('import', '--proposal', self.proposal_path, success=False)
+        self.assertIn('nodes[0].id', result.stderr)
+        self.assertIn('Correct the proposal and refresh', result.stderr)
+
     def test_real_cli_partial_resume_confirmation_and_distinct_views(self):
         self.start_import()
         first = self.cli('review', stdin='inside\n')

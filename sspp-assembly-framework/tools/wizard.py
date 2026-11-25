@@ -75,8 +75,18 @@ def generate(repository, answer_path, output):
     repository = checkout_root(repository)
     answers = load_json(answer_path)
     require_answers(answers)
+    # Keep authored line breaks in intake/context; document metadata needs one line.
+    document_title = ' '.join(answers['system_name'].split())
     catalog, selection = selected_catalog(answers['mode'], answers.get('baseline'))
     inherited = generated_files(answers, catalog)
+    from source_review import accepted
+    from source_drafting import draft_files
+    # Validate reviewed source before creating or changing the output project.
+    source_record = accepted(repository, answer_path.parent.parent)
+    if (output / 'wizard-state.json').is_file():
+        prior_source = load_json(output / 'wizard-state.json').get('source_findings_sha256')
+        if prior_source and source_record is None:
+            raise ValueError('Previously used source review is missing; restore it before regenerating')
     observations = inspect(repository)
     output = validate_output(repository, output, 'project')
     if output.exists() and any(output.iterdir()) and not (output / 'wizard-state.json').is_file():
@@ -86,7 +96,7 @@ def generate(repository, answer_path, output):
         selected = Path(temporary) / 'catalog.json'
         selected.write_bytes(json_bytes(catalog))
         pin = sha(selected.read_bytes())
-        report, _ = scaffold(selected, pin, output, answers['system_name'], answers['date'], include_diagrams=False)
+        report, _ = scaffold(selected, pin, output, document_title, answers['date'], include_diagrams=False)
     note = ('# Repository-informed draft\n\n'
             f'System: {answers["system_name"]}\n\nOwner (user supplied): {answers["system_owner"]}\n\n'
             f'Environment (user supplied): {answers["environment"]}\n\n'
@@ -101,21 +111,33 @@ def generate(repository, answer_path, output):
     desired['chapters/boundary.md'] = markdown_file('Boundary intake', 'Proposed boundary from user answers', note)
     state_path = output / 'wizard-state.json'
     previous = load_json(state_path) if state_path.exists() else {'managed': {}}
-    preserved = []
+    source_files, preserved, context = draft_files(source_record, catalog, output, previous['managed'])
+    desired.update(source_files)
+    if context:
+        desired['chapters/system-name.md'] = markdown_file('System intake', 'Owner context and selected source findings',
+            note + '\n## Source-assisted system description\n\n' + context)
     managed = dict(previous['managed'])
+    source_report_names = {'source-review/findings.md', 'source-review/provenance.json'}
+    source_report_edited = any(name in managed and (
+        not (output / name).is_file() or sha((output / name).read_bytes()) != managed[name])
+        for name in source_report_names)
     inheritance_edited = state_path.exists() and any(
         (name in managed and (not (output / name).is_file() or sha((output / name).read_bytes()) != managed[name]))
         or ((output / name).exists() and name not in managed)
         for name in inherited)
     for name, content in desired.items():
         path = output / name
+        if source_report_edited and name in source_report_names:
+            preserved.append(name)
+            continue
         if inheritance_edited and name in inherited:
             preserved.append(name)
             continue
         if name in managed and sha(path.read_bytes()) != managed[name]:
             preserved.append(name)
             continue
-        if name not in managed and state_path.exists() and path.exists():
+        if name not in managed and state_path.exists() and path.exists() and not (
+                name in source_files and name.startswith('controls/')):
             preserved.append(name)
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -124,12 +146,15 @@ def generate(repository, answer_path, output):
     # Refresh manifest after diagram answers, preserving scaffold identities and authored files.
     with tempfile.TemporaryDirectory(prefix='wizard-selection-') as temporary:
         selected = Path(temporary) / 'catalog.json';selected.write_bytes(json_bytes(catalog))
-        scaffold(selected, sha(selected.read_bytes()), output, answers['system_name'], answers['date'], include_diagrams=False)
+        scaffold(selected, sha(selected.read_bytes()), output, document_title, answers['date'], include_diagrams=False)
     (output / 'repository-observations.json').write_bytes(json_bytes(observations))
     (output / 'wizard-report.json').write_bytes(json_bytes({'selection': selection, 'repository_revision': observations['repository_revision'],
         'selected_shells': report['total_controls'], 'preserved_user_files': preserved,
-        'status': 'DRAFT_REQUIRES_IMPLEMENTATION_EVIDENCE', 'diagram_basis': 'Separate proposal/review flow; legacy diagram files preserved'}))
-    state_path.write_bytes(json_bytes({'managed': managed, 'answers_sha256': sha(answer_path.read_bytes())}))
+        'status': 'DRAFT_REQUIRES_IMPLEMENTATION_EVIDENCE',
+        'source_findings_included': len(source_record['findings']) if source_record else 0,
+        'diagram_basis': 'Separate proposal/review flow; legacy diagram files preserved'}))
+    state_path.write_bytes(json_bytes({'managed': managed, 'answers_sha256': sha(answer_path.read_bytes()),
+                                      'source_findings_sha256': source_record['findings_sha256'] if source_record else None}))
     return report
 
 

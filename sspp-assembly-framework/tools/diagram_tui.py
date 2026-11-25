@@ -7,12 +7,13 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Label, Select, Static, TabbedContent, TabPane
 from textual.containers import VerticalScroll
+from copyable_tui import CopyableApp, CopyTextScreen
 
 
 VIEWS = ('context', 'architecture', 'boundary', 'data-flow')
 
 
-class DiagramApp(App):
+class DiagramApp(CopyableApp):
     """Keep analysis execution and human confirmation explicit and independent."""
 
     TITLE = 'Diagram dashboard'
@@ -55,6 +56,7 @@ class DiagramApp(App):
                     yield Static('Without a configured runner, give the exact request below to your authorized '
                                  'agent, then refresh after it writes proposal.json.', classes='detail', markup=False)
                     yield Static('', id='handoff', markup=False)
+                    yield Button('Copy prompt', id='copy-prompt')
             with TabPane('Questions', id='questions'):
                 with VerticalScroll(classes='panel'):
                     yield Checkbox('Show known answers for correction', id='show-known')
@@ -194,6 +196,8 @@ class DiagramApp(App):
         finally:
             self.busy = False
             self.update_controls()
+            if not error_message and self.state.get('stage') == 'blocked':
+                error_message = 'Proposal needs correction: ' + self.state.get('message', '')
             self.set_status(error_message or f'{action.title()} complete. {self.state.get("message", "")}')
 
     def action_refresh_dashboard(self):
@@ -209,7 +213,9 @@ class DiagramApp(App):
         if self.busy or event.button.disabled:
             return
         action = event.button.id
-        if action == 'save-answer' and self.selected_question:
+        if action == 'copy-prompt':
+            self.push_screen(CopyTextScreen(self.dashboard.handoff_text()))
+        elif action == 'save-answer' and self.selected_question:
             question = self.selected_question
             value = (self.query_one('#answer-choice', Select).value if question.get('choices')
                      else self.query_one('#answer-text', Input).value)

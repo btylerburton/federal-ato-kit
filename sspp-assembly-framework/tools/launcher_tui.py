@@ -9,12 +9,14 @@ from textual.widgets import Button, Footer, Header, Input, Label, Select, Static
 
 from repository_intake import checkout_root
 from workspace_paths import claim_workspace, discover_workspaces, suggest_workspace, validate_workspace
+from launcher_diagnostics import LOGGER
+from copyable_tui import CopyableApp
 
 
 PATH_ERRORS = (OSError, ValueError, subprocess.SubprocessError)
 
 
-class LauncherApp(App):
+class LauncherApp(CopyableApp):
     """Choose a repository, explicitly select a workspace, and return a workflow."""
 
     TITLE = 'ATO workspace launcher'
@@ -57,6 +59,9 @@ class LauncherApp(App):
             yield Static('', id='suggestion', classes='hint', markup=False)
             yield Static('', id='summary', markup=False)
             yield Static(self.tool_status(), id='tools', classes='hint', markup=False)
+            yield Static('Text draft first offers optional shared source review; continue manually if no AI is available.',
+                         classes='hint', markup=False)
+            yield Button('Source review / LLM assist', id='source')
             yield Static('', id='error', markup=False)
         with Horizontal(id='actions'):
             yield Button('Text draft', id='text', variant='primary')
@@ -73,7 +78,9 @@ class LauncherApp(App):
         return '\n'.join(lines)
 
     def on_mount(self):
+        LOGGER.info('Workspace chooser mounted; detecting repository and workspaces')
         self.detect()
+        self.call_after_refresh(lambda: LOGGER.info('Workspace chooser first screen rendered'))
 
     def repository_path(self):
         value = self.query_one('#repository', Input).value
@@ -116,6 +123,7 @@ class LauncherApp(App):
             self.suggestion = None
             self.query_one('#summary', Static).update('Repository could not be detected.')
             self.set_error(error)
+            LOGGER.warning('Repository/workspace detection failed: %s', type(error).__name__)
 
     def update_summary(self):
         self.set_error()
@@ -165,7 +173,7 @@ class LauncherApp(App):
                 self.update_summary()
             except PATH_ERRORS as error:
                 self.set_error(error)
-        elif action in ('text', 'diagrams'):
+        elif action in ('text', 'diagrams', 'source'):
             self.launch(action)
 
     def launch(self, workflow):

@@ -17,8 +17,8 @@ FORMAT = 'diagram-review-v1'
 NODE_FIELDS = ('title', 'boundary')
 FLOW_FIELDS = ('from', 'to', 'data', 'protocol', 'authentication', 'storage')
 TOP_FIELDS = ('system_name', 'environment', 'date')
-LABEL = re.compile(r'[A-Za-z0-9][A-Za-z0-9 ._()/,:+@-]{0,159}')
-IDENTIFIER = re.compile(r'[a-z][a-z0-9_]{0,59}')
+LABEL = re.compile(r'[A-Za-z0-9][A-Za-z0-9 ._()/,:;+@-]{0,159}')
+IDENTIFIER = re.compile(r'[a-z][a-z0-9_-]{0,59}')
 
 
 def git(repository, *args):
@@ -107,7 +107,8 @@ def read_session(repository, workspace):
 
 def plain(value, label):
     if not isinstance(value, str) or not LABEL.fullmatch(value):
-        raise ValueError(f'{label} needs a plain single-line label (maximum 160 characters)')
+        raise ValueError(f'{label} needs a plain single-line label (maximum 160 characters); '
+                         'use letters, digits, spaces and ._()/,:;+@-')
 
 
 def field_value(proposal, key, value):
@@ -165,9 +166,10 @@ def validate_proposal(repository, state, proposal):
         if not isinstance(items, list) or not 1 <= len(items) <= limit:
             raise ValueError(f'Proposal needs 1..{limit} {group}')
         seen = set()
-        for item in items:
+        for index, item in enumerate(items):
             if not isinstance(item, dict) or not isinstance(item.get('id'), str) or not IDENTIFIER.fullmatch(item['id']):
-                raise ValueError('Invalid node/flow ID')
+                raise ValueError(f'{group}[{index}].id: use 1–60 lowercase letters, digits, underscores or hyphens; '
+                                 'start with a letter (example: crawl-scheduler). Correct the proposal and refresh.')
             if item['id'] in seen:
                 raise ValueError('Duplicate node/flow ID')
             seen.add(item['id'])
@@ -190,7 +192,10 @@ def validate_proposal(repository, state, proposal):
     if not isinstance(assumptions, list) or len(assumptions) > 100:
         raise ValueError('assumptions must be an array (maximum 100)')
     for assumption in assumptions:
-        plain(assumption, 'Assumption')
+        # Assumptions are review prose, never interpolated into PlantUML source.
+        if (not isinstance(assumption, str) or not assumption.strip() or len(assumption) > 4000
+                or any(ord(c) < 32 and c not in '\n\r\t' for c in assumption)):
+            raise ValueError('Assumption needs nonempty review text (maximum 4000 characters)')
     return provenance
 
 
@@ -292,6 +297,15 @@ def review(repository, workspace, answer_path=None, confirm=False, reviewer=None
 
 def projection(proposal, view):
     nodes, flows = copy.deepcopy(proposal['nodes']), copy.deepcopy(proposal['flows'])
+    # PlantUML aliases and downstream inventories use underscores. Hex encoding all
+    # IDs when needed is injective (unlike replacing '-' with '_'). Original review IDs stay intact.
+    if any('-' in n['id'] for n in nodes):
+        aliases = {n['id']: 'node_' + n['id'].encode().hex() for n in nodes}
+        for node in nodes:
+            node['proposal_id'] = node['id']
+            node['id'] = aliases[node['id']]
+        for flow in flows:
+            flow['from'], flow['to'] = aliases[flow['from']], aliases[flow['to']]
     if view == 'context':
         inside = {n['id'] for n in nodes if n['boundary'] == 'inside'}
         system_id = 'reviewed_system'

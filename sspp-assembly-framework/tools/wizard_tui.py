@@ -7,15 +7,24 @@ from rich.text import Text
 from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, VerticalScroll
-from textual.widgets import Button, Checkbox, ContentSwitcher, Footer, Header, Input, Label, Select, Static
+from textual.widgets import Button, Checkbox, ContentSwitcher, Footer, Header, Input, Label, Select, Static, TextArea
 
 from inheritance import QUESTIONS
 from wizard_session import WizardSession
+from copyable_tui import CopyableApp
 
 
 SECTIONS = ('system', 'scope', 'inheritance', 'review')
 SYSTEM_FIELDS = ('system_name', 'system_owner', 'environment', 'date')
+FREE_TEXT_FIELDS = ('system_name', 'system_owner', 'environment', 'data_categories', 'boundary_summary')
 INHERITANCE_HELP = {
+    'hosting_service': (
+        'Hosting service\n\n'
+        'Where does the assessed deployment run? Choose cloud-gov-paas for applications on '
+        'cloud.gov Cloud Foundry, cloud-gov-pages for sites on cloud.gov Pages, or other for '
+        'another platform. These services have different responsibility allocations. Ask your '
+        'platform administrator or check deployment records. Choose unknown if not confirmed; '
+        'hosting alone does not establish control inheritance.'),
     'egress_proxy': (
         'Egress proxy\n\n'
         'A proxy controls outbound connections from an application. Choose yes only if '
@@ -61,9 +70,54 @@ INHERITANCE_HELP = {
         'applicable actions, keep applicability unresolved rather than claiming evidence. '
         'This is a practice, not automatic GSA common-control inheritance.'),
 }
+FIELD_HELP = {
+    'system_name': 'System name and mission\n\n'
+        'Name the system being assessed and briefly describe what it does. Example: '
+        'Search.gov crawler — collects public web content for search. The initial repository '
+        'name is only a suggestion; replace it with the name your team uses.',
+    'system_owner': 'System owner\n\n'
+        'Identify the accountable owner or team who can resolve scope and implementation '
+        'questions. Example: Search platform product owner. Ask your project lead or ISSO '
+        'if unsure; do not assume the repository maintainer is the system owner.',
+    'environment': 'Environment and release\n\n'
+        'Which deployment are you assessing? Production serves real users; staging is used '
+        'for pre-release testing; development is used to build and test changes. Include the '
+        'release or revision if known. Examples: Production — release 0.0.1; '
+        'Staging — release candidate 2; Local development only. This is not your terminal, '
+        'Python virtual environment, or an environment-variable setting. Ask the deployment '
+        'owner if you do not know which deployment is in scope.',
+    'date': 'Document date\n\n'
+        'Use the date for this draft in YYYY-MM-DD format, for example 2026-11-24. '
+        'An empty date initially defaults to today and is retained when you resume. '
+        'It is not an authorization or approval date.',
+    'mode': 'Authorization track\n\n'
+        'lato creates a limited 58-control reference draft. ato creates a full selected '
+        'NIST baseline draft. Ask your system owner or ISSO which path applies. '
+        'Selecting lato does not establish eligibility or agency acceptance.',
+    'baseline': 'Security baseline\n\n'
+        'For ato, select low, moderate, or high based on the system’s approved impact '
+        'categorization and agency guidance. This is not software quality or a risk '
+        'preference. Ask your ISSO if unknown. This selection is not required for lato.',
+    'data_categories': 'Data categories\n\n'
+        'List the kinds of information processed, stored, or transmitted, separated by commas '
+        'or new lines. Examples: public webpage text, URLs and crawl metadata, operational '
+        'logs, service credentials, administrative activity records. List categories only, '
+        'not actual credentials or personal records. Public content can still contain PII.',
+    'boundary_summary': 'Proposed assessment boundary\n\n'
+        'Describe the components covered by this assessment and distinguish external '
+        'services. Example: Includes crawler workers, scheduler and system-owned Redis; '
+        'target websites and the shared search index are external interfaces. Use only '
+        'components your system actually uses and state unresolved scope decisions. '
+        'Detailed diagrams are reviewed separately; hosting does not decide the boundary.',
+    'scope_confirmed': 'Confirm draft scope\n\n'
+        'Check this only when the owner has confirmed the draft’s scope and track selection '
+        'are appropriate. It does not certify implemented controls or authorize production. '
+        'Leave it unchecked while that confirmation is pending.',
+    **INHERITANCE_HELP,
+}
 
 
-class WizardApp(App):
+class WizardApp(CopyableApp):
     """Autosave user declarations without inferring approval or inheritance."""
 
     TITLE = 'SSPP draft wizard'
@@ -78,6 +132,8 @@ class WizardApp(App):
     .panel { padding: 1 2; }
     Label { margin-top: 1; height: auto; }
     Input, Select { width: 100%; }
+    TextArea { width: 100%; height: 5; }
+    #data_categories, #boundary_summary { height: 7; }
     .error { color: $error; height: auto; }
     .hint { color: $text-muted; height: auto; }
     #status { height: auto; max-height: 4; padding: 0 1; }
@@ -97,12 +153,27 @@ class WizardApp(App):
         self.generating = False
         self.step = session.current_step if session.current_step in SECTIONS else 'system'
 
+    def field_heading(self, key, title):
+        with Horizontal(classes='question-row'):
+            yield Label(title, markup=False)
+            button = Button('? Help', id='help-' + key, classes='question-help')
+            button.active_effect_duration = 0
+            button.tooltip = 'Explain this field. Click or press Enter.'
+            yield button
+        detail = Static(FIELD_HELP[key], id='help-detail-' + key,
+                        classes='help-detail', markup=False)
+        detail.display = False
+        yield detail
+
     def field(self, key, title=None):
-        yield Label(title or key.replace('_', ' ').title(), markup=False)
+        yield from self.field_heading(key, title or key.replace('_', ' ').title())
         value = self.session.answers.get(key, '')
         if isinstance(value, list):
             value = ', '.join(value)
-        yield Input(str(value or ''), id=key)
+        if key in FREE_TEXT_FIELDS:
+            yield TextArea(str(value or ''), id=key, soft_wrap=True, tab_behavior='focus')
+        else:
+            yield Input(str(value or ''), id=key)
         yield Static('', id='error-' + key, classes='error', markup=False)
 
     def choice(self, key, options, value):
@@ -122,12 +193,13 @@ class WizardApp(App):
                     for field in SYSTEM_FIELDS:
                         yield from self.field(field)
                 with VerticalScroll(id='scope', classes='panel'):
-                    yield Label('Authorization track', markup=False)
+                    yield from self.field_heading('mode', 'Authorization track')
                     yield from self.choice('mode', ('lato', 'ato'), self.session.answers.get('mode'))
-                    yield Label('Baseline (required for ATO)', markup=False)
+                    yield from self.field_heading('baseline', 'Baseline (required for ATO)')
                     yield from self.choice('baseline', ('low', 'moderate', 'high'), self.session.answers.get('baseline'))
-                    yield from self.field('data_categories', 'Data categories (comma-separated)')
+                    yield from self.field('data_categories', 'Data categories (commas or new lines)')
                     yield from self.field('boundary_summary', 'Proposed boundary (describe the actual scope)')
+                    yield from self.field_heading('scope_confirmed', 'Draft scope confirmation')
                     yield Checkbox('I confirm this draft scope and selection',
                                    value=self.session.answers.get('scope_confirmed') is True, id='scope_confirmed')
                     yield Static('', id='error-scope_confirmed', classes='error', markup=False)
@@ -136,19 +208,7 @@ class WizardApp(App):
                                  classes='hint', markup=False)
                     for question in QUESTIONS:
                         key = question['id']
-                        with Horizontal(classes='question-row'):
-                            yield Label(question['question'], markup=False)
-                            if key in INHERITANCE_HELP:
-                                button = Button('? Help', id='help-' + key, classes='question-help')
-                                # Disclosure toggles should accept an immediate second activation.
-                                button.active_effect_duration = 0
-                                button.tooltip = 'Explain this question and what evidence to check. Click or press Enter.'
-                                yield button
-                        if key in INHERITANCE_HELP:
-                            detail = Static(INHERITANCE_HELP[key], id='help-detail-' + key,
-                                            classes='help-detail', markup=False)
-                            detail.display = False
-                            yield detail
+                        yield from self.field_heading(key, question['question'])
                         yield from self.choice('inheritance-' + key, question['choices'],
                                                self.session.answers.get('inheritance', {}).get(key, 'unknown'))
                 with VerticalScroll(id='review', classes='panel'):
@@ -168,7 +228,8 @@ class WizardApp(App):
 
     def on_mount(self):
         self.refresh_validation()
-        self.set_status('\n'.join(self.session.notices) or 'Edits save automatically. Ctrl+S saves; Ctrl+Q saves and exits.')
+        self.set_status('\n'.join(self.session.notices) or
+                        'Edits autosave. Text wraps; Enter adds a line, Tab moves fields. Ctrl+Q saves and exits.')
         self.call_after_refresh(self.enable_autosave)
 
     def enable_autosave(self):
@@ -218,9 +279,13 @@ class WizardApp(App):
         self.refresh_validation()
 
     def on_input_changed(self, event: Input.Changed):
-        field = event.input.id
-        if field in (*SYSTEM_FIELDS, 'data_categories', 'boundary_summary'):
-            value = event.value
+        if event.input.id == 'date':
+            self.save_field('date', event.value)
+
+    def on_text_area_changed(self, event: TextArea.Changed):
+        field = event.text_area.id
+        if field in FREE_TEXT_FIELDS:
+            value = event.text_area.text
             if field == 'data_categories':
                 value = [part.strip() for part in re.split(r'[,\n]', value) if part.strip()]
             self.save_field(field, value)
@@ -289,7 +354,7 @@ class WizardApp(App):
             self.set_status('Resolve the listed issues before generating.')
             return
         self.generating = True
-        for widget in self.query('Input, Select, Checkbox, Button'):
+        for widget in self.query('Input, TextArea, Select, Checkbox, Button'):
             widget.disabled = True
         self.set_status('Generating the review draft…')
         result = self.query_one('#generation-result', Static)
@@ -306,7 +371,7 @@ class WizardApp(App):
             self.set_status('Generation failed. Review the error, correct the answers, and retry.')
         finally:
             self.generating = False
-            for widget in self.query('Input, Select, Checkbox, Button'):
+            for widget in self.query('Input, TextArea, Select, Checkbox, Button'):
                 widget.disabled = False
             self.refresh_validation()
 

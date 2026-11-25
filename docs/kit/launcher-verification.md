@@ -8,6 +8,37 @@ last_updated: "2026-11-24"
 
 # Verification
 
+## Host virtual-environment correction
+
+The user subsequently reported the mismatch guard firing and setup finding packages in the
+base pyenv installation. This confirms that the intended virtual environment was not active;
+it does not prove which host configuration caused it. The macOS `__PYVENV_LAUNCHER__` hint is
+a possible contributor, not an observed host root cause.
+
+The bootstrap now clears inherited interpreter overrides and invokes local Python with `-I`.
+Setup clears those overrides and pip target/prefix/user overrides locally, verifies sys.prefix,
+base-prefix separation and disabled global/user package access before pip, then checks that
+Textual is imported from the intended environment. Synthetic interpreter and real temporary
+venv tests verify these guards; no host shell/global settings were changed. One generated test
+probe initially had a mismatched brace and was corrected before the final pass.
+
+The setup script was syntax-checked; no fresh network installation or macOS-host run is claimed.
+
+## Bootstrap hang guard and diagnostics
+
+User reported a blank launch including `--help`. The exact host issue was not reproduced in
+the Linux harness, but inspection found unbounded interpreter re-execution if the local
+interpreter did not report the expected virtual-environment prefix. The wrapper now serves
+help before switching and stops a mismatched interpreter after one restart. Synthetic executable
+fixtures reproduce that mismatch and verify the actionable exit, rather than hanging.
+
+Added `-v`/`--verbose` and `--log`, with append-only UTC startup-stage logging and error types/
+stack locations. No argument/answer/environment values or raw exception messages are captured.
+Ten focused launcher tests passed, including a real mismatched-interpreter subprocess, broken-
+interpreter help, diagnostics without argument leakage and existing Textual chooser cases.
+The current wrapper also rendered the chooser through a real pseudo-terminal in this environment;
+this does not establish the cause or resolution on the user's Ghostty host.
+
 OpenCode AI coordinator, bounded Textual implementation delegate and independent blocker
 review. User requested one start/resume entrypoint and lowercase `docs` or timestamped docs
 inside the repository. No consuming repository was changed during implementation; tests use

@@ -84,6 +84,20 @@ class DiagramTuiTests(unittest.IsolatedAsyncioTestCase):
         await pilot.pause()
         await self.click(app, pilot, '#save-answer')
 
+    async def test_invalid_proposal_is_not_reported_as_refresh_success_and_prompt_copies(self):
+        self.proposal['nodes'][0]['id'] = 'bad id'
+        dashboard = self.dashboard(proposal=True)
+        app = DiagramApp(dashboard)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await self.settled(app, pilot)
+            status = str(app.query_one('#status', Static).render())
+            self.assertIn('Proposal needs correction:', status)
+            self.assertIn('nodes[0].id', status)
+            self.assertNotIn('Refresh complete', status)
+            await self.click(app, pilot, '#copy-prompt')
+            await pilot.click('#copy-all')
+            self.assertEqual(app.clipboard, dashboard.handoff_text())
+
     async def test_missing_proposal_explains_handoff_at_both_terminal_sizes(self):
         for size in ((80, 24), (100, 40)):
             with self.subTest(size=size):

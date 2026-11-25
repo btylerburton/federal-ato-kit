@@ -80,6 +80,12 @@ an existing wizard-owned workspace. For a new workspace click **New workspace**:
 documentation is not adopted or overwritten. A timestamp collision gets a numeric suffix.
 Nothing is created until you choose a workflow.
 
+**Text draft** first offers [optional shared source review](docs/kit/source-review.md).
+Copy its request to an approved LLM, use an explicitly configured runner, or continue manually
+without AI. Review findings before including them in system descriptions and candidate control
+narratives. The same analysis may supply topology for the separate diagram review.
+Use **F4** to copy a focused field or visible screen text; prompts also have explicit copy buttons.
+
 To keep using an existing external workspace:
 
 ```sh
@@ -98,6 +104,31 @@ Run the launcher by absolute path from any directory. `--runner`, `--plantuml-ja
 `--pandoc` pass explicit optional diagram tools through; no model or dependency is downloaded
 automatically. Missing Textual yields the setup command. Run `./ato-wizard --help` without setup
 to inspect usage.
+
+### Startup troubleshooting
+
+```sh
+./ato-wizard -v ../searchgov-spider
+# Or choose the local diagnostic destination:
+./ato-wizard -v --log /path/to/startup.log ../searchgov-spider
+```
+
+The default log is `tmp/ato-wizard.log` under the kit. It appends UTC timestamps and startup
+stages (interpreter selection, UI imports, chooser mount and first render), plus error types
+and stack locations. Verbose mode also prints pre-UI stages to stderr. Logs do not capture
+answers, command arguments, environment values, repository contents or raw exception messages.
+They can contain local interpreter paths. Do not run two sessions against one workspace.
+
+`--help` bypasses optional-environment switching. The launcher switches interpreters at most
+once; a mismatched virtual environment produces an actionable error instead of a restart loop.
+Interpreter switching clears inherited Python home/path and macOS launcher overrides and
+uses Python isolated mode. `setup-tui.sh` verifies the actual environment prefix and package
+isolation **before pip runs**, and verifies Textual's local installation afterward. If setup
+lists packages in a base pyenv directory, do not treat that as a working local environment.
+The script changes environment variables only for its own process, not your shell configuration.
+If no log is created at all, Python may not have reached the wrapper; check your `python3`
+command/pyenv configuration. A recorded first-render event narrows a blank screen to terminal
+display behavior rather than assuming that interpreter startup is the cause.
 
 The text UI has section progress, Back/Next, inline validation, autosave and Save & Exit.
 Diagramming is a separate proposal/review flow after an agent has inspected the source;

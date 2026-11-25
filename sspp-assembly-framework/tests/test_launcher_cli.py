@@ -12,6 +12,27 @@ import launcher
 
 
 class LauncherCliTests(unittest.TestCase):
+    def test_text_launch_offers_source_review_before_questions(self):
+        for proceed in (True, False):
+            calls = []
+            class App:
+                count = 0
+                def __init__(self, *args): pass
+                def run(self):
+                    App.count += 1
+                    return {'repository': Path('/fixture'), 'workspace': Path('/docs'), 'workflow': 'text'} if App.count == 1 else None
+            def source(*args):
+                calls.append('source')
+                return proceed
+            modules = {'launcher_tui': types.SimpleNamespace(LauncherApp=App),
+                       'wizard_tui': types.SimpleNamespace(launch=lambda *args: calls.append('text')),
+                       'diagram_tui': types.SimpleNamespace(launch=lambda *args: calls.append('diagram')),
+                       'source_review_tui': types.SimpleNamespace(launch=source)}
+            with patch.dict(sys.modules, modules), patch.object(launcher, 'configure'), patch.object(sys, 'argv', ['ato-wizard']), \
+                 patch.object(sys.stdin, 'isatty', return_value=True), patch.object(sys.stdout, 'isatty', return_value=True):
+                launcher.main()
+            self.assertEqual(calls, ['source', 'text'] if proceed else ['source'])
+
     def test_relative_arguments_resolve_against_invocation_directory(self):
         captured=[]
         class App:
@@ -19,7 +40,8 @@ class LauncherCliTests(unittest.TestCase):
             def run(self):return None
         modules={'launcher_tui':types.SimpleNamespace(LauncherApp=App),
                  'wizard_tui':types.SimpleNamespace(launch=lambda *args:None),
-                 'diagram_tui':types.SimpleNamespace(launch=lambda *args:None)}
+                 'diagram_tui':types.SimpleNamespace(launch=lambda *args:None),
+                 'source_review_tui':types.SimpleNamespace(launch=lambda *args:False)}
         with tempfile.TemporaryDirectory() as directory:
             previous=Path.cwd()
             try:

@@ -22,6 +22,8 @@ class WorkspaceTests(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory(prefix='owned-docs-');self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name);self.repo=self.root/'app';self.repo.mkdir()
         self.git('init','-q')
+        # A monitor inherited from user config can create an uncopyable IPC socket.
+        self.git('config','--local','core.fsmonitor','false')
         (self.repo/'source.txt').write_text('Client calls service.\n')
         self.git('add','.')
         self.git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','fixture')

@@ -6,10 +6,38 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 if __name__ == '__main__':
-    # Prefer the repository-local optional environment; never auto-install dependencies.
-    prepared = ROOT / '.venv-tui' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
-    if prepared.is_file() and Path(sys.prefix).resolve() != (ROOT / '.venv-tui').resolve():
-        os.execv(str(prepared), [str(prepared), str(Path(__file__).resolve()), *sys.argv[1:]])
     sys.path.insert(0, str(ROOT / 'sspp-assembly-framework/tools'))
+    from launcher_diagnostics import configure, stage, failure, LOGGER
+    # Help is standard-library only and must work even with a broken optional environment.
+    help_requested = any(arg in {'-h', '--help'} for arg in sys.argv[1:])
+    verbose = 0
+    if not help_requested:
+        verbose, log_path = configure(ROOT, sys.argv[1:])
+        stage('Python bootstrap entered', verbose)
+        LOGGER.debug('Interpreter=%s; prefix=%s', sys.executable, sys.prefix)
+    # Prefer the repository-local optional environment; never retry a mismatched interpreter.
+    prepared = ROOT / '.venv-tui' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+    if not help_requested and prepared.is_file() and Path(sys.prefix).resolve() != (ROOT / '.venv-tui').resolve():
+        if os.environ.get('ATO_WIZARD_BOOTSTRAP') == str(ROOT):
+            stage('Interpreter prefix mismatch after one restart; aborting', verbose)
+            raise SystemExit('ato-wizard: the local Python did not activate the expected .venv-tui. '
+                             'Stopped instead of restarting repeatedly. Check PYTHONHOME and the local '
+                             'virtual environment, then recreate it with bash setup-tui.sh if needed.')
+        env = dict(os.environ, ATO_WIZARD_BOOTSTRAP=str(ROOT))
+        # macOS may inherit a launcher hint pointing at the base pyenv interpreter.
+        # Environment isolation must be established before Python initializes sys.prefix.
+        for key in ('__PYVENV_LAUNCHER__', 'PYTHONHOME', 'PYTHONPATH', 'PYTHONUSERBASE'):
+            env.pop(key, None)
+        stage('Switching once to the kit-local Python environment', verbose)
+        try:
+            os.execve(str(prepared), [str(prepared), '-I', str(Path(__file__).resolve()), *sys.argv[1:]], env)
+        except OSError as error:
+            failure(error)
+            raise SystemExit('Unable to start local Python; see the startup log for the error type.') from error
+    os.environ.pop('ATO_WIZARD_BOOTSTRAP', None)
     from launcher import main
-    main()
+    try:
+        main()
+    except Exception as error:
+        failure(error)
+        raise

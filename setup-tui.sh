@@ -10,6 +10,12 @@ if [[ $# -ne 0 ]]; then
   echo "Usage: bash setup-tui.sh" >&2
   exit 2
 fi
-python3 -m venv "$ROOT/.venv-tui"
-"$ROOT/.venv-tui/bin/python" -m pip install --require-hashes --only-binary=:all: -r "$ROOT/sspp-assembly-framework/requirements-tui.txt"
-echo "Ready: .venv-tui/bin/python sspp-assembly-framework/tools/wizard.py tui --repository /path/to/repo --workspace /path/to/repo-ato"
+# Local to this script: do not change the user's shell or global pyenv configuration.
+unset __PYVENV_LAUNCHER__ PYTHONHOME PYTHONPATH PYTHONUSERBASE
+unset PIP_TARGET PIP_PREFIX PIP_USER
+export PIP_CONFIG_FILE=/dev/null
+python3 -I -m venv "$ROOT/.venv-tui"
+"$ROOT/.venv-tui/bin/python" -I "$ROOT/sspp-assembly-framework/tools/verify_tui_environment.py" "$ROOT/.venv-tui"
+"$ROOT/.venv-tui/bin/python" -I -m pip --isolated install --require-hashes --only-binary=:all: -r "$ROOT/sspp-assembly-framework/requirements-tui.txt"
+"$ROOT/.venv-tui/bin/python" -I "$ROOT/sspp-assembly-framework/tools/verify_tui_environment.py" "$ROOT/.venv-tui" --check-textual
+echo "Ready: ./ato-wizard /path/to/repository"

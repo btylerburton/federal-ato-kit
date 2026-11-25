@@ -86,6 +86,21 @@ figures. Rendering does not establish correct boundaries, completed controls or 
 
 ## Development and verification
 
+The launcher offers source review before Text draft and through **Source review / LLM assist**.
+See `docs/kit/source-review.md`. Users can continue without an LLM. The exact handoff request is
+`source-review/agent-request.md`; write findings to `source-review/findings.json` using the
+pinned revision and safe citations. Explicitly identify manual versus LLM-assisted authorship.
+Never fill human inclusion decisions or confirmation on behalf of the user. Findings can suggest
+system context and candidate control/part narratives; they cannot infer owner, baseline, approval
+or inheritance. Generation consumes only human-included findings, retains provenance and
+NOT_ASSESSED status, and preserves authored responses. Optional topology is sent explicitly
+to the existing diagram review. F4 opens copyable field/screen text; prompt copy has a file fallback.
+
+For a blank or stalled launch, use `./ato-wizard -v <repo>` and inspect the kit-local
+`tmp/ato-wizard.log` (or explicit `--log PATH`). Diagnose the last observed startup stage before
+attributing a cause to the terminal. Never request an environment dump or log credentials/answers.
+Help must work without Textual or virtual-environment switching; bootstrap may re-exec at most once.
+
 - Standard-library bootstrap/verify: `python3 check.py` from the kit root. No install needed.
 - Optional dependencies: `bash setup.sh` after download approval; `bash setup.sh --help`
   describes separate renderer prerequisites.

@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location("root_check", REPO / "check.py")
@@ -46,6 +47,29 @@ class RootCheckTests(unittest.TestCase):
         code, output = run_main([("a", exit_with(0), Path.cwd())])
         self.assertEqual(code, 0)
         self.assertIn("PASS: a", output)
+
+    def test_symlinked_temp_parent_supports_workspace_validation_in_child(self):
+        with tempfile.TemporaryDirectory(prefix="check-temp-parent-") as temporary:
+            root = Path(temporary).resolve()
+            target = root / "physical"
+            target.mkdir()
+            alias = root / "alias"
+            alias.symlink_to(target, target_is_directory=True)
+            child = """import sys, tempfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from workspace_paths import validate_workspace
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    repository = root / 'app'
+    repository.mkdir()
+    workspace = root / 'workspace'
+    assert validate_workspace(repository, workspace) == workspace.resolve()
+"""
+            command = [sys.executable, "-c", child, str(REPO / "sspp-assembly-framework/tools")]
+            with patch.object(root_check.tempfile, "tempdir", str(alias)):
+                code, output = run_main([("workspace validation", command, REPO)])
+            self.assertEqual(code, 0, output)
 
     def test_setup_help_and_bad_argument_do_not_install(self):
         helped = subprocess.run(["bash", str(REPO / "setup.sh"), "--help"], capture_output=True,

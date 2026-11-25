@@ -209,7 +209,12 @@ def plan(output, full, selected, document, state, include_diagrams=True):
         modules.append(module(key, title, f"chapters/{key}.md", "Team-authored appendix"))
     if (output / 'inheritance/responsibilities.md').is_file():
         modules.append(module('inherited-responsibilities', 'Candidate inherited responsibilities',
-                              'inheritance/responsibilities.md', 'Versioned provider reference assertions; applicability unresolved'))
+                               'inheritance/responsibilities.md', 'Versioned provider reference assertions; applicability unresolved'))
+    if (output / 'source-review/findings.md').is_file():
+        modules.append(module('source-review-findings', 'Source-assisted drafting findings',
+                              'source-review/findings.md', 'Human-selected source findings; NOT_ASSESSED'))
+        modules.append({'id': 'source-review-provenance', 'title': 'Source review provenance', 'kind': 'attachment',
+                        'path': 'source-review/provenance.json', 'source': 'Revision, citations and human drafting decisions'})
     supporting = load_json(output / "supporting.json") if (output / "supporting.json").exists() else {"modules": []}
     if not isinstance(supporting, dict) or not isinstance(supporting.get("modules"), list):
         raise ValueError("supporting.json must contain a modules array")

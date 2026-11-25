@@ -40,11 +40,23 @@ claimed internal workspaces. Output children inside a claimed workspace are `int
 and `export`; application source outside it remains untouched.
 
 System → Scope → Inheritance → Review panels show remaining errors.
-The Inheritance panel has a `? Help` button beside the four yes/no/unknown questions (egress
-proxy, GSA common controls, organization dependency management and SHA pinning). Click or
-keyboard-activate it to expand guidance beside the question; activate Close to collapse it.
-Guidance explains qualifying evidence, who to ask and when unknown is appropriate. Opening
+The unified launcher offers [optional source review](source-review.md) first. Human-selected,
+source-cited findings can seed system-description text and candidate control narratives; users
+without an LLM can continue directly. F4 opens a copyable field or visible-screen snapshot,
+and Ctrl+Shift+C copies selected text. Saved requests provide an offline/file-based fallback.
+Every text-wizard field has a `? Help` button, including selections and scope confirmation.
+Click or keyboard-activate it to expand guidance beside the question; activate Close to
+collapse it. Guidance provides examples, explains qualifying evidence, and identifies who
+to ask when unsure. Environment means the assessed deployment and release (for example,
+`Production — release 0.0.1`), not the Python environment used to run the wizard. Opening
 help does not change saved answers or confirm scope.
+
+Free-form answers (system name, owner, environment, data categories and proposed boundary)
+use multiline editors that wrap to the available terminal width. Enter adds a line; Tab and
+Shift+Tab move between controls. Long answers scroll vertically. Visual wrapping does not
+insert newlines into saved text. Data categories accept commas or newlines as separators.
+The fixed-format document date remains a single-line field. A multiline system name is
+preserved in context text; its whitespace is flattened for the document's single-line title.
 
 Fields autosave even when incomplete, and generation stays disabled until required text
 answers are valid. Ctrl+S saves and Ctrl+Q
